@@ -1,0 +1,9 @@
+version: '3.8'
+services:
+  postgis:
+    image: mdillon/postgis:11-alpine
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: orm_playground
+      POSTGRES_PASSWORD: orm_playground
