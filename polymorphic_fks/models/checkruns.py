@@ -78,3 +78,36 @@ class CheckrunWithMultipleFks(models.Model):
         elif self.feature_type_metadata_id:
             return FeatureTypeMetadata
         return None
+
+
+class MultiTableBaseCheckrun(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)
+    passed = models.BooleanField()
+
+
+class MultiTableCheckrunOgcService(MultiTableBaseCheckrun):
+    resource = models.ForeignKey(to=OgcService, on_delete=models.CASCADE)
+
+
+class MultiTableCheckrunLayer(MultiTableBaseCheckrun):
+    resource = models.ForeignKey(to=Layer, on_delete=models.CASCADE)
+
+
+class MultiTableCheckrunFeatureType(MultiTableBaseCheckrun):
+    resource = models.ForeignKey(to=FeatureType, on_delete=models.CASCADE)
+
+
+class MultiTableCheckrunDatasetMetadata(MultiTableBaseCheckrun):
+    resource = models.ForeignKey(to=DatasetMetadata, on_delete=models.CASCADE)
+
+
+class MultiTableCheckrunServiceMetadata(MultiTableBaseCheckrun):
+    resource = models.ForeignKey(to=ServiceMetadata, on_delete=models.CASCADE)
+
+
+class MultiTableCheckrunLayerMetadata(MultiTableBaseCheckrun):
+    resource = models.ForeignKey(to=LayerMetadata, on_delete=models.CASCADE)
+
+
+class MultiTableCheckrunFeatureTypeMetadata(MultiTableBaseCheckrun):
+    resource = models.ForeignKey(to=FeatureTypeMetadata, on_delete=models.CASCADE)

@@ -1,10 +1,9 @@
 from django_tables2 import tables
 
-from polymorphic_fks.models import CheckrunUsingStandardFk, CheckrunWithMultipleFks
+from polymorphic_fks.models import CheckrunUsingStandardFk, CheckrunWithMultipleFks, MultiTableBaseCheckrun
 
 
 class CheckrunUsingStandardFkTable(tables.Table):
-
     resource_type = tables.columns.Column(empty_values=())
 
     class Meta:
@@ -17,7 +16,6 @@ class CheckrunUsingStandardFkTable(tables.Table):
 
 
 class CheckrunWithGenericFkTable(tables.Table):
-
     class Meta:
         model = CheckrunUsingStandardFk
         template_name = "django_tables2/bootstrap.html"
@@ -25,7 +23,6 @@ class CheckrunWithGenericFkTable(tables.Table):
 
 
 class CheckrunWithMultipleFksTable(tables.Table):
-
     resource_type = tables.columns.Column(empty_values=())
 
     class Meta:
@@ -35,3 +32,16 @@ class CheckrunWithMultipleFksTable(tables.Table):
 
     def render_resource_type(self, record):
         return record.resource_type.__name__
+
+
+class MultiTableBaseCheckrunTable(tables.Table):
+    resource_type = tables.columns.Column(empty_values=())
+
+    class Meta:
+        model = MultiTableBaseCheckrun
+        template_name = "django_tables2/bootstrap.html"
+        fields = ("id", 'created_at', 'passed',)
+
+    def render_resource_type(self):
+        return 'Unknown'
+
