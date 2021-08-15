@@ -1,0 +1,11 @@
+{% load render_table from django_tables2 %}
+<!doctype html>
+<html>
+    <head>
+        <title>List of Checkruns (using standard fk)</title>
+    </head>
+    <body>
+        <h1>List of Checkruns (using standard fk)</h1>
+        {% render_table object_list %}
+    </body>
+</html>
