@@ -1,10 +1,11 @@
 import random
-from itertools import islice
+from itertools import islice, chain
 
 from django.core.management import BaseCommand
 
-from polymorphic_fks.models import OgcService
-from polymorphic_fks.models.checkruns import CheckrunUsingStandardFk
+from polymorphic_fks.models import OgcService, Layer, FeatureType, DatasetMetadata, ServiceMetadata, LayerMetadata, \
+    FeatureTypeMetadata
+from polymorphic_fks.models.checkruns import CheckrunUsingStandardFk, CheckrunWithGenericFk
 
 
 class Command(BaseCommand):
@@ -26,10 +27,25 @@ class Command(BaseCommand):
         resource = random.choice(services)
         return CheckrunUsingStandardFk(passed=passed, resource=resource)
 
+    @staticmethod
+    def checkrun_with_generic_fk(resources):
+        passed = bool(random.getrandbits(1))
+        resource = random.choice(resources)
+        return CheckrunWithGenericFk(passed=passed, resource=resource)
+
     def handle(self, *args, **options):
         services = OgcService.objects.all()
 
-        self.stdout.write(f'Generating {Command.COUNT} CheckrunUsingStandardFk instances')
-        checkruns = (self.checkrun_using_standard_fk(services) for i in range(1, Command.COUNT))
-        self.insert_batch(checkruns, CheckrunUsingStandardFk, 1000)
-        self.stdout.write(self.style.SUCCESS('Successfully generated and inserted checkruns'))
+        resources = list(chain(services, Layer.objects.all(), FeatureType.objects.all(), DatasetMetadata.objects.all(),
+                          ServiceMetadata.objects.all(), LayerMetadata.objects.all(), FeatureTypeMetadata.objects.all()))
+
+
+        # self.stdout.write(f'Generating {Command.COUNT} CheckrunUsingStandardFk instances')
+        # checkruns = (self.checkrun_using_standard_fk(services) for i in range(1, Command.COUNT))
+        # self.insert_batch(checkruns, CheckrunUsingStandardFk, 1000)
+        #
+        self.stdout.write(f'Generating {Command.COUNT} CheckrunWithGenericFk instances')
+        checkruns = (self.checkrun_with_generic_fk(resources) for i in range(1, Command.COUNT))
+        self.insert_batch(checkruns, CheckrunWithGenericFk, 1000)
+
+        # self.stdout.write(self.style.SUCCESS('Successfully generated and inserted checkruns'))
