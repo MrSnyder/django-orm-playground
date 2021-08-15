@@ -2,8 +2,9 @@
 from django.views.generic import ListView, TemplateView
 from django_tables2 import SingleTableView
 
-from polymorphic_fks.models import CheckrunUsingStandardFk, CheckrunWithGenericFk
-from polymorphic_fks.tables import CheckrunUsingStandardFkTable, CheckrunWithGenericFkTable
+from polymorphic_fks.models import CheckrunUsingStandardFk, CheckrunWithGenericFk, CheckrunWithMultipleFks
+from polymorphic_fks.tables import CheckrunUsingStandardFkTable, CheckrunWithGenericFkTable, \
+    CheckrunWithMultipleFksTable
 
 
 class HomeView(TemplateView):
@@ -19,4 +20,10 @@ class CheckrunUsingStandardFkListView(SingleTableView):
 class CheckrunsWithGenericFk(SingleTableView):
     model = CheckrunWithGenericFk
     table_class = CheckrunWithGenericFkTable
+    template_name = 'polymorphic_fks/checkruns.html'
+
+
+class CheckrunsWithMultipleFks(SingleTableView):
+    model = CheckrunWithMultipleFks
+    table_class = CheckrunWithMultipleFksTable
     template_name = 'polymorphic_fks/checkruns.html'
