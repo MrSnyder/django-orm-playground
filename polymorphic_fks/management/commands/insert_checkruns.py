@@ -5,10 +5,13 @@ from django.core.management import BaseCommand
 
 from polymorphic_fks.models import OgcService, Layer, FeatureType, DatasetMetadata, ServiceMetadata, LayerMetadata, \
     FeatureTypeMetadata
-from polymorphic_fks.models.checkruns import CheckrunUsingStandardFk, CheckrunWithGenericFk, CheckrunWithMultipleFks, \
+from polymorphic_fks.models.checkruns import CheckrunWithGenericFk, CheckrunWithMultipleFks, \
     MultiTableCheckrunOgcService, MultiTableCheckrunLayer, MultiTableCheckrunFeatureType, \
     MultiTableCheckrunDatasetMetadata, MultiTableCheckrunServiceMetadata, MultiTableCheckrunLayerMetadata, \
-    MultiTableCheckrunFeatureTypeMetadata
+    MultiTableCheckrunFeatureTypeMetadata, DjangoPolymorphicCheckrunOgcService, DjangoPolymorphicCheckrunLayer, \
+    DjangoPolymorphicCheckrunFeatureType, DjangoPolymorphicCheckrunDatasetMetadata, \
+    DjangoPolymorphicCheckrunServiceMetadata, DjangoPolymorphicCheckrunLayerMetadata, \
+    DjangoPolymorphicCheckrunFeatureTypeMetadata
 
 
 class Command(BaseCommand):
@@ -23,12 +26,6 @@ class Command(BaseCommand):
                 break
             inserted_resources.extend(resource_cls.objects.bulk_create(batch, batch_size))
         return inserted_resources
-
-    @staticmethod
-    def checkrun_using_standard_fk(services):
-        passed = bool(random.getrandbits(1))
-        resource = random.choice(services)
-        return CheckrunUsingStandardFk(passed=passed, resource=resource)
 
     @staticmethod
     def checkrun_with_generic_fk(resources):
@@ -65,6 +62,27 @@ class Command(BaseCommand):
         else:
             raise ValueError(f"Unhandled resource class: {resource.__class__.__name__}")
 
+    @staticmethod
+    def checkrun_django_polymorphic(resources):
+        passed = bool(random.getrandbits(1))
+        resource = random.choice(resources)
+        if isinstance(resource, OgcService):
+            return DjangoPolymorphicCheckrunOgcService(passed=passed, resource=resource)
+        elif isinstance(resource, Layer):
+            return DjangoPolymorphicCheckrunLayer(passed=passed, resource=resource)
+        elif isinstance(resource, FeatureType):
+            return DjangoPolymorphicCheckrunFeatureType(passed=passed, resource=resource)
+        elif isinstance(resource, DatasetMetadata):
+            return DjangoPolymorphicCheckrunDatasetMetadata(passed=passed, resource=resource)
+        elif isinstance(resource, ServiceMetadata):
+            return DjangoPolymorphicCheckrunServiceMetadata(passed=passed, resource=resource)
+        elif isinstance(resource, LayerMetadata):
+            return DjangoPolymorphicCheckrunLayerMetadata(passed=passed, resource=resource)
+        elif isinstance(resource, FeatureTypeMetadata):
+            return DjangoPolymorphicCheckrunFeatureTypeMetadata(passed=passed, resource=resource)
+        else:
+            raise ValueError(f"Unhandled resource class: {resource.__class__.__name__}")
+
     def handle(self, *args, **options):
         services = OgcService.objects.all()
 
@@ -72,17 +90,13 @@ class Command(BaseCommand):
                                ServiceMetadata.objects.all(), LayerMetadata.objects.all(),
                                FeatureTypeMetadata.objects.all()))
 
-        # self.stdout.write(f'Generating {Command.COUNT} CheckrunUsingStandardFk instances')
-        # checkruns = (self.checkrun_using_standard_fk(services) for i in range(1, Command.COUNT))
-        # self.insert_batch(checkruns, CheckrunUsingStandardFk, 1000)
-        #
-        # self.stdout.write(f'Generating {Command.COUNT} CheckrunWithGenericFk instances')
-        # checkruns = (self.checkrun_with_generic_fk(resources) for i in range(1, Command.COUNT))
-        # self.insert_batch(checkruns, CheckrunWithGenericFk, 1000)
+        self.stdout.write(f'Generating {Command.COUNT} CheckrunWithGenericFk instances')
+        checkruns = (self.checkrun_with_generic_fk(resources) for i in range(0, Command.COUNT))
+        self.insert_batch(checkruns, CheckrunWithGenericFk, 1000)
 
-        # self.stdout.write(f'Generating {Command.COUNT} CheckrunWithMultipleFks instances')
-        # checkruns = (self.checkrun_with_multiple_fks(resources) for i in range(1, Command.COUNT))
-        # self.insert_batch(checkruns, CheckrunWithMultipleFks, 1000)
+        self.stdout.write(f'Generating {Command.COUNT} CheckrunWithMultipleFks instances')
+        checkruns = (self.checkrun_with_multiple_fks(resources) for i in range(0, Command.COUNT))
+        self.insert_batch(checkruns, CheckrunWithMultipleFks, 1000)
 
         self.stdout.write(f'Generating {Command.COUNT} MultiTableCheckrun instances')
         checkruns = [self.checkrun_multi_table(resources) for i in range(0, Command.COUNT)]
@@ -94,6 +108,22 @@ class Command(BaseCommand):
                     MultiTableCheckrunDatasetMetadata, MultiTableCheckrunServiceMetadata,
                     MultiTableCheckrunLayerMetadata,
                     MultiTableCheckrunFeatureTypeMetadata]:
+            filtered_checkruns = [run for run in checkruns if isinstance(run, cls)]
+            self.stdout.write(f'Inserting {len(filtered_checkruns)} {cls.__name__} instances')
+            count = 1
+            for run in filtered_checkruns:
+                run.save()
+                if count % 1000 == 0:
+                    self.stdout.write(f'...{count}')
+                count = count + 1
+
+        self.stdout.write(f'Generating {Command.COUNT} DjangoPolymorphicCheckrun instances')
+        checkruns = [self.checkrun_django_polymorphic(resources) for i in range(0, Command.COUNT)]
+        for cls in [DjangoPolymorphicCheckrunOgcService, DjangoPolymorphicCheckrunLayer,
+                    DjangoPolymorphicCheckrunFeatureType,
+                    DjangoPolymorphicCheckrunDatasetMetadata, DjangoPolymorphicCheckrunServiceMetadata,
+                    DjangoPolymorphicCheckrunLayerMetadata,
+                    DjangoPolymorphicCheckrunFeatureTypeMetadata]:
             filtered_checkruns = [run for run in checkruns if isinstance(run, cls)]
             self.stdout.write(f'Inserting {len(filtered_checkruns)} {cls.__name__} instances')
             count = 1

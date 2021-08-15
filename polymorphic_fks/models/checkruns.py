@@ -2,16 +2,10 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models import Q
+from polymorphic.models import PolymorphicModel
 
 from polymorphic_fks.models import OgcService, Layer, FeatureType, DatasetMetadata, ServiceMetadata, LayerMetadata, \
     FeatureTypeMetadata
-
-
-class CheckrunUsingStandardFk(models.Model):
-    created_at = models.DateTimeField(auto_now_add=True)
-    passed = models.BooleanField()
-    resource = models.ForeignKey(to=OgcService,
-                                 on_delete=models.CASCADE)
 
 
 class CheckrunWithGenericFk(models.Model):
@@ -110,4 +104,37 @@ class MultiTableCheckrunLayerMetadata(MultiTableBaseCheckrun):
 
 
 class MultiTableCheckrunFeatureTypeMetadata(MultiTableBaseCheckrun):
+    resource = models.ForeignKey(to=FeatureTypeMetadata, on_delete=models.CASCADE)
+
+
+class DjangoPolymorphicBaseCheckrun(PolymorphicModel):
+    created_at = models.DateTimeField(auto_now_add=True)
+    passed = models.BooleanField()
+
+
+class DjangoPolymorphicCheckrunOgcService(DjangoPolymorphicBaseCheckrun):
+    resource = models.ForeignKey(to=OgcService, on_delete=models.CASCADE)
+
+
+class DjangoPolymorphicCheckrunLayer(DjangoPolymorphicBaseCheckrun):
+    resource = models.ForeignKey(to=Layer, on_delete=models.CASCADE)
+
+
+class DjangoPolymorphicCheckrunFeatureType(DjangoPolymorphicBaseCheckrun):
+    resource = models.ForeignKey(to=FeatureType, on_delete=models.CASCADE)
+
+
+class DjangoPolymorphicCheckrunDatasetMetadata(DjangoPolymorphicBaseCheckrun):
+    resource = models.ForeignKey(to=DatasetMetadata, on_delete=models.CASCADE)
+
+
+class DjangoPolymorphicCheckrunServiceMetadata(DjangoPolymorphicBaseCheckrun):
+    resource = models.ForeignKey(to=ServiceMetadata, on_delete=models.CASCADE)
+
+
+class DjangoPolymorphicCheckrunLayerMetadata(DjangoPolymorphicBaseCheckrun):
+    resource = models.ForeignKey(to=LayerMetadata, on_delete=models.CASCADE)
+
+
+class DjangoPolymorphicCheckrunFeatureTypeMetadata(DjangoPolymorphicBaseCheckrun):
     resource = models.ForeignKey(to=FeatureTypeMetadata, on_delete=models.CASCADE)

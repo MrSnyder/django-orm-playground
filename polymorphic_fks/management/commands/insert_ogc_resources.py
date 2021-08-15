@@ -107,6 +107,5 @@ class Command(BaseCommand):
             if counter % 1000 == 0:
                 self.stdout.write(f'...{counter}', ending='')
             counter = counter + 1
-            self.stdout.write('')
 
         self.stdout.write(self.style.SUCCESS('Successfully generated and inserted OGC resources'))
