@@ -10,7 +10,7 @@
 <ul>
     <li><a href="{% url 'polymorphic_fks:checkruns-with-generic-fk' %}?exclude=resource_name">Generic FK</a></li>
     <li><a href="{% url 'polymorphic_fks:checkruns-with-multiple-fks' %}?exclude=resource_name">Sparse multi FKs (one FK for each resource type)</a></li>
-    <li><a href="{% url 'polymorphic_fks:checkruns-with-multiple-fks' %}?exclude=resource_name">Sparse intermediate FK lookup table (one FK for each resource type)</a></li>
+    <li><a href="{% url 'polymorphic_fks:checkruns-with-fk-lookup-table' %}?exclude=resource_name">Sparse intermediate FK lookup table (one FK for each resource type)</a></li>
     <li><a href="{% url 'polymorphic_fks:checkruns-with-fks-in-child-table' %}?exclude=resource_name">Multi-table inheritance (simple FK in each child table)</a></li>
     <li><a href="{% url 'polymorphic_fks:checkruns-with-django-polymorphic' %}?exclude=resource_name">Multi-table inheritance with django-polymorphic</a></li>
 </ul>
@@ -19,7 +19,7 @@
 
     <li><a href="{% url 'polymorphic_fks:checkruns-with-generic-fk' %}">Generic FK</a></li>
     <li><a href="{% url 'polymorphic_fks:checkruns-with-multiple-fks' %}">Sparse multi FKs (one FK for each resource type)</a></li>
-    <li><a href="{% url 'polymorphic_fks:checkruns-with-multiple-fks' %}">Sparse intermediate FK lookup table (one FK for each resource type)</a></li>
+    <li><a href="{% url 'polymorphic_fks:checkruns-with-fk-lookup-table' %}">Sparse intermediate FK lookup table (one FK for each resource type)</a></li>
     <li><a href="{% url 'polymorphic_fks:checkruns-with-fks-in-child-table' %}">Multi-table inheritance (simple FK in each child table)</a></li>
     <li><a href="{% url 'polymorphic_fks:checkruns-with-django-polymorphic' %}">Multi-table inheritance with django-polymorphic</a></li>
 

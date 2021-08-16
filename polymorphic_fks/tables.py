@@ -1,7 +1,7 @@
 from django_tables2 import tables
 
 from polymorphic_fks.models import CheckrunWithMultipleFks, MultiTableBaseCheckrun, \
-    DjangoPolymorphicBaseCheckrun, CheckrunWithGenericFk
+    DjangoPolymorphicBaseCheckrun, CheckrunWithGenericFk, CheckrunWithFkLookupTable
 
 
 class CheckrunWithGenericFkTable(tables.Table):
@@ -20,6 +20,16 @@ class CheckrunWithMultipleFksTable(tables.Table):
 
     class Meta:
         model = CheckrunWithMultipleFks
+        template_name = "django_tables2/bootstrap.html"
+        fields = ("id", 'created_at', 'passed', 'resource_name')
+
+
+class CheckrunWithFkLookupTableTable(tables.Table):
+    resource = tables.columns.TemplateColumn(
+        '<a href="{{ record.resource_url }}">{{ record.resource_type }} #{{ record.resource_id }}</a>')
+
+    class Meta:
+        model = CheckrunWithFkLookupTable
         template_name = "django_tables2/bootstrap.html"
         fields = ("id", 'created_at', 'passed', 'resource_name')
 

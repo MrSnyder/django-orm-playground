@@ -195,7 +195,7 @@ class CheckrunWithFkLookupTable(models.Model):
 
     @property
     def resource_type(self):
-        return self._resource.linked_resource_id
+        return self._resource.linked_resource_type
 
     @property
     def resource_url(self):
@@ -243,7 +243,7 @@ class MultiTableBaseCheckrun(models.Model):
         if getmodelattr(self, 'multitablecheckrunogcservice'):
             return reverse('polymorphic_fks:ogcservice-detail', kwargs={'pk': self.multitablecheckrunogcservice.id})
         elif getmodelattr(self, 'multitablecheckrunlayer'):
-            return reverse('polymorphic_fks:layer-detail', kwargs={'pk': self.layer.multitablecheckrunlayer.id})
+            return reverse('polymorphic_fks:layer-detail', kwargs={'pk': self.multitablecheckrunlayer.id})
         elif getmodelattr(self, 'multitablecheckrunfeaturetype'):
             return reverse('polymorphic_fks:featuretype-detail', kwargs={'pk': self.multitablecheckrunfeaturetype.id})
         elif getmodelattr(self, 'multitablecheckrundatasetmetadata'):

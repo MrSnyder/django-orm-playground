@@ -4,10 +4,10 @@ from django_tables2 import SingleTableView, RequestConfig
 
 from polymorphic_fks.models import CheckrunWithGenericFk, CheckrunWithMultipleFks, \
     MultiTableBaseCheckrun, DjangoPolymorphicBaseCheckrun, OgcService, Layer, FeatureType, ServiceMetadata, \
-    LayerMetadata, FeatureTypeMetadata, DatasetMetadata
+    LayerMetadata, FeatureTypeMetadata, DatasetMetadata, CheckrunWithFkLookupTable
 from polymorphic_fks.tables import \
     CheckrunWithMultipleFksTable, MultiTableBaseCheckrunTable, DjangoPolymorphicBaseCheckrunTable, \
-    CheckrunWithGenericFkTable
+    CheckrunWithGenericFkTable, CheckrunWithFkLookupTableTable
 
 
 class HomeView(TemplateView):
@@ -48,7 +48,7 @@ class CheckrunsWithGenericFk(SingleTableView):
     template_name = 'polymorphic_fks/checkruns.html'
 
     def get_queryset(self):
-        qs = super().get_queryset()
+        qs = super().get_queryset().order_by('pk')
         return qs.select_related('_resource_type')
 
     def get_table(self, **kwargs):
@@ -70,8 +70,9 @@ class CheckrunsWithMultipleFks(SingleTableView):
     template_name = 'polymorphic_fks/checkruns.html'
 
     def get_queryset(self):
-        qs = super().get_queryset()
-        return qs.select_related('ogc_service', 'layer', 'feature_type')
+        qs = super().get_queryset().order_by('pk')
+        return qs.select_related('ogc_service', 'layer', 'feature_type', 'dataset_metadata', 'service_metadata',
+                                 'layer_metadata', 'feature_type_metadata')
 
     def get_table(self, **kwargs):
         """
@@ -87,13 +88,15 @@ class CheckrunsWithMultipleFks(SingleTableView):
 
 
 class CheckrunsWithFkLookupTable(SingleTableView):
-    model = CheckrunWithMultipleFks
-    table_class = CheckrunWithMultipleFksTable
+    model = CheckrunWithFkLookupTable
+    table_class = CheckrunWithFkLookupTableTable
     template_name = 'polymorphic_fks/checkruns.html'
 
     def get_queryset(self):
-        qs = super().get_queryset()
-        return qs.select_related('ogc_service', 'layer', 'feature_type')
+        qs = super().get_queryset().order_by('pk')
+        return qs.select_related('_resource__ogc_service', '_resource__layer', '_resource__feature_type',
+                                 '_resource__dataset_metadata', '_resource__service_metadata',
+                                 '_resource__layer_metadata', '_resource__feature_type_metadata')
 
     def get_table(self, **kwargs):
         """
@@ -114,11 +117,13 @@ class CheckrunsWithFksInChildTables(SingleTableView):
     template_name = 'polymorphic_fks/checkruns.html'
 
     def get_queryset(self):
-        qs = super().get_queryset()
-        return qs.select_related('multitablecheckrunogcservice', 'multitablecheckrunlayer',
-                                 'multitablecheckrunfeaturetype', 'multitablecheckrundatasetmetadata',
-                                 'multitablecheckrunservicemetadata', 'multitablecheckrunlayermetadata',
-                                 'multitablecheckrunfeaturetypemetadata')
+        qs = super().get_queryset().order_by('pk')
+        return qs.select_related('multitablecheckrunogcservice__resource', 'multitablecheckrunlayer__resource',
+                                 'multitablecheckrunfeaturetype__resource',
+                                 'multitablecheckrundatasetmetadata__resource',
+                                 'multitablecheckrunservicemetadata__resource',
+                                 'multitablecheckrunlayermetadata__resource',
+                                 'multitablecheckrunfeaturetypemetadata__resource')
 
     def get_table(self, **kwargs):
         """
@@ -139,7 +144,7 @@ class CheckrunsWithDjangoPolymorphic(SingleTableView):
     template_name = 'polymorphic_fks/checkruns.html'
 
     def get_queryset(self):
-        qs = super().get_queryset()
+        qs = super().get_queryset().order_by('pk')
         return qs
         # select_related on inherited models is not supported yet...
         # return qs.select_related('djangopolymorphiccheckrunogcservice', 'djangopolymorphiccheckrunlayer', ...)
