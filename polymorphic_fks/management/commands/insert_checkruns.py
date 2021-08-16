@@ -12,7 +12,7 @@ from polymorphic_fks.models.checkruns import CheckrunWithGenericFk, CheckrunWith
     MultiTableCheckrunFeatureTypeMetadata, DjangoPolymorphicCheckrunOgcService, DjangoPolymorphicCheckrunLayer, \
     DjangoPolymorphicCheckrunFeatureType, DjangoPolymorphicCheckrunDatasetMetadata, \
     DjangoPolymorphicCheckrunServiceMetadata, DjangoPolymorphicCheckrunLayerMetadata, \
-    DjangoPolymorphicCheckrunFeatureTypeMetadata
+    DjangoPolymorphicCheckrunFeatureTypeMetadata, CheckrunWithFkLookupTable
 
 
 class Command(BaseCommand):
@@ -35,17 +35,23 @@ class Command(BaseCommand):
         return CheckrunWithGenericFk(passed=passed, resource=resource)
 
     @staticmethod
-    def checkrun_with_multiple_fks(resources):
-        passed = bool(random.getrandbits(1))
-        resource = random.choice(resources)
+    def checkrun_with_multiple_fks(checkrun_with_generic_fk):
+        passed = checkrun_with_generic_fk.passed
         run = CheckrunWithMultipleFks(passed=passed)
-        run.set_resource(resource)
+        run.set_resource(checkrun_with_generic_fk.resource)
         return run
 
     @staticmethod
-    def checkrun_multi_table(resources):
-        passed = bool(random.getrandbits(1))
-        resource = random.choice(resources)
+    def checkrun_with_fk_lookup_table(checkrun_with_generic_fk):
+        passed = checkrun_with_generic_fk.passed
+        run = CheckrunWithFkLookupTable(passed=passed)
+        run.set_resource(checkrun_with_generic_fk.resource)
+        return run
+
+    @staticmethod
+    def checkrun_multi_table(checkrun_with_generic_fk):
+        passed = checkrun_with_generic_fk.passed
+        resource = checkrun_with_generic_fk.resource
         if isinstance(resource, OgcService):
             return MultiTableCheckrunOgcService(passed=passed, resource=resource)
         elif isinstance(resource, Layer):
@@ -64,9 +70,9 @@ class Command(BaseCommand):
             raise ValueError(f"Unhandled resource class: {resource.__class__.__name__}")
 
     @staticmethod
-    def checkrun_django_polymorphic(resources):
-        passed = bool(random.getrandbits(1))
-        resource = random.choice(resources)
+    def checkrun_django_polymorphic(checkrun_with_generic_fk):
+        passed = checkrun_with_generic_fk.passed
+        resource = checkrun_with_generic_fk.resource
         if isinstance(resource, OgcService):
             return DjangoPolymorphicCheckrunOgcService(passed=passed, resource=resource)
         elif isinstance(resource, Layer):
@@ -93,18 +99,19 @@ class Command(BaseCommand):
                                FeatureTypeMetadata.objects.all()))
 
         self.stdout.write(f'Generating {Command.COUNT} CheckrunWithGenericFk instances')
-        checkruns = (self.checkrun_with_generic_fk(resources) for i in range(0, Command.COUNT))
-        self.insert_batch(checkruns, CheckrunWithGenericFk, 1000)
+        checkruns_generic_fk = (self.checkrun_with_generic_fk(resources) for i in range(0, Command.COUNT))
+        checkruns_generic_fk = self.insert_batch(checkruns_generic_fk, CheckrunWithGenericFk, 1000)
 
         self.stdout.write(f'Generating {Command.COUNT} CheckrunWithMultipleFks instances')
-        checkruns = (self.checkrun_with_multiple_fks(resources) for i in range(0, Command.COUNT))
+        checkruns = (self.checkrun_with_multiple_fks(checkrun) for checkrun in checkruns_generic_fk)
         self.insert_batch(checkruns, CheckrunWithMultipleFks, 1000)
 
+        self.stdout.write(f'Generating {Command.COUNT} CheckrunWithFkLookupTable instances')
+        checkruns = (self.checkrun_with_fk_lookup_table(checkrun) for checkrun in checkruns_generic_fk)
+        self.insert_batch(checkruns, CheckrunWithFkLookupTable, 1000)
+
         self.stdout.write(f'Generating {Command.COUNT} MultiTableCheckrun instances')
-        checkruns = [self.checkrun_multi_table(resources) for i in range(0, Command.COUNT)]
-        filtered_checkruns = (run for run in checkruns)
-        # self.stdout.write(f'Inserting {Command.COUNT} MultiTableBaseCheckrun instances')
-        # self.insert_batch(filtered_checkruns, MultiTableBaseCheckrun, 1000)
+        checkruns = [self.checkrun_multi_table(checkrun) for checkrun in checkruns_generic_fk]
         for cls in [MultiTableCheckrunOgcService, MultiTableCheckrunLayer,
                     MultiTableCheckrunFeatureType,
                     MultiTableCheckrunDatasetMetadata, MultiTableCheckrunServiceMetadata,
@@ -120,7 +127,7 @@ class Command(BaseCommand):
                 count = count + 1
 
         self.stdout.write(f'Generating {Command.COUNT} DjangoPolymorphicCheckrun instances')
-        checkruns = [self.checkrun_django_polymorphic(resources) for i in range(0, Command.COUNT)]
+        checkruns = [self.checkrun_django_polymorphic(checkrun) for checkrun in checkruns_generic_fk]
         for cls in [DjangoPolymorphicCheckrunOgcService, DjangoPolymorphicCheckrunLayer,
                     DjangoPolymorphicCheckrunFeatureType,
                     DjangoPolymorphicCheckrunDatasetMetadata, DjangoPolymorphicCheckrunServiceMetadata,

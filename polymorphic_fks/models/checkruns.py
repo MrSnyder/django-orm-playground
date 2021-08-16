@@ -6,7 +6,7 @@ from django.urls import reverse
 from polymorphic.models import PolymorphicModel
 
 from polymorphic_fks.models import OgcService, Layer, FeatureType, DatasetMetadata, ServiceMetadata, LayerMetadata, \
-    FeatureTypeMetadata
+    FeatureTypeMetadata, Resource
 
 
 def getmodelattr(model, attr, default=None):
@@ -179,6 +179,31 @@ class CheckrunWithMultipleFks(models.Model):
         elif self.feature_type_metadata_id:
             return 'Unnamed resource'
         return None
+
+
+class CheckrunWithFkLookupTable(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)
+    passed = models.BooleanField()
+    _resource = models.ForeignKey(db_column='resource_id', to=Resource, on_delete=models.CASCADE, null=True)
+
+    def set_resource(self, linked_resource):
+        self._resource = Resource.objects.filter_by_linked_resource(linked_resource).get()
+
+    @property
+    def resource_id(self):
+        return self._resource.linked_resource_id
+
+    @property
+    def resource_type(self):
+        return self._resource.linked_resource_id
+
+    @property
+    def resource_url(self):
+        return self._resource.linked_resource_url
+
+    @property
+    def resource_name(self):
+        return self._resource.linked_resource_name
 
 
 class MultiTableBaseCheckrun(models.Model):
