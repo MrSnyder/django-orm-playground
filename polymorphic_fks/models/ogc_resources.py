@@ -1,6 +1,7 @@
 from uuid import uuid4
 
 from django.db import models
+from django.urls import reverse
 
 
 class OgcService(models.Model):
@@ -19,6 +20,9 @@ class OgcService(models.Model):
     def __str__(self):
         return self.name
 
+    def get_absolute_url(self):
+        return reverse('polymorphic_fks:ogcservice-detail', kwargs={'pk': self.pk})
+
 
 class Layer(models.Model):
     service = models.ForeignKey(to=OgcService,
@@ -29,6 +33,9 @@ class Layer(models.Model):
 
     def __str__(self):
         return self.name
+
+    def get_absolute_url(self):
+        return reverse('polymorphic_fks:layer-detail', kwargs={'pk': self.pk})
 
 
 class FeatureType(models.Model):
@@ -41,6 +48,9 @@ class FeatureType(models.Model):
     def __str__(self):
         return self.name
 
+    def get_absolute_url(self):
+        return reverse('polymorphic_fks:featuretype-detail', kwargs={'pk': self.pk})
+
 
 class DatasetMetadata(models.Model):
     file_identifier = models.TextField(default=uuid4)
@@ -50,6 +60,9 @@ class DatasetMetadata(models.Model):
     def __str__(self):
         return self.file_identifier
 
+    def get_absolute_url(self):
+        return reverse('polymorphic_fks:dataset-metadata-detail', kwargs={'pk': self.pk})
+
 
 class ServiceMetadata(models.Model):
     file_identifier = models.TextField(default=uuid4)
@@ -57,6 +70,9 @@ class ServiceMetadata(models.Model):
 
     def __str__(self):
         return self.file_identifier
+
+    def get_absolute_url(self):
+        return reverse('polymorphic_fks:service-metadata-detail', kwargs={'pk': self.pk})
 
 
 class LayerMetadata(models.Model):
@@ -66,6 +82,9 @@ class LayerMetadata(models.Model):
     def __str__(self):
         return self.file_identifier
 
+    def get_absolute_url(self):
+        return reverse('polymorphic_fks:layer-metadata-detail', kwargs={'pk': self.pk})
+
 
 class FeatureTypeMetadata(models.Model):
     file_identifier = models.TextField(default=uuid4)
@@ -73,3 +92,6 @@ class FeatureTypeMetadata(models.Model):
 
     def __str__(self):
         return self.file_identifier
+
+    def get_absolute_url(self):
+        return reverse('polymorphic_fks:featuretype-metadata-detail', kwargs={'pk': self.pk})

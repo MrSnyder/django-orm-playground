@@ -49,7 +49,7 @@ class CheckrunsWithGenericFk(SingleTableView):
 
     def get_queryset(self):
         qs = super().get_queryset()
-        return qs.select_related('resource_type')
+        return qs.select_related('_resource_type')
 
     def get_table(self, **kwargs):
         """
@@ -75,8 +75,25 @@ class CheckrunsWithFksInChildTables(SingleTableView):
     table_class = MultiTableBaseCheckrunTable
     template_name = 'polymorphic_fks/checkruns.html'
 
+    def get_queryset(self):
+        qs = super().get_queryset()
+        return qs.select_related('multitablecheckrunogcservice', 'multitablecheckrunlayer',
+                                 'multitablecheckrunfeaturetype', 'multitablecheckrundatasetmetadata',
+                                 'multitablecheckrunservicemetadata', 'multitablecheckrunlayermetadata',
+                                 'multitablecheckrunfeaturetypemetadata')
+
 
 class CheckrunsWithDjangoPolymorphic(SingleTableView):
     model = DjangoPolymorphicBaseCheckrun
     table_class = DjangoPolymorphicBaseCheckrunTable
     template_name = 'polymorphic_fks/checkruns.html'
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        return qs
+        # select_related on inherited models is not supported yet...
+        # return qs.select_related('djangopolymorphiccheckrunogcservice', 'djangopolymorphiccheckrunlayer', ...)
+        # see https://django-polymorphic.readthedocs.io/en/stable/advanced.html#combining-querysets
+        # only works when one turns of the polymorphic mode:
+        # return qs.non_polymorphic().select_related('djangopolymorphiccheckrunogcservice',
+        #                                            'djangopolymorphiccheckrunlayer')
