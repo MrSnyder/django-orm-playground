@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Feature Type {{ object.pk }}</title>
+</head>
+<body>
+<h1>Feature Type {{ object.pk }}</h1>
+<p>Name: {{ object.name }}</p>
+<p>Service: <a href="{% url 'polymorphic_fks:ogcservice-detail' object.service_id %}">{{ object.service_id }}</a></p>
+</body>
+</html>

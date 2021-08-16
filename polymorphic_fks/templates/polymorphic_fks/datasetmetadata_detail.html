@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dataset Metadata {{ object.pk }}</title>
+</head>
+<body>
+<h1>Dataset Metadata {{ object.pk }}</h1>
+<p>File identifier: {{ object.file_identifier }}</p>
+<h2>Layers</h2>
+<ul>
+{% for layer in object.layers.all %}
+<li><a href="{% url 'polymorphic_fks:layer-detail' layer.pk %}">{{ layer.name }}</a></li>
+{% endfor %}
+</ul>
+<h2>Feature types</h2>
+<ul>
+{% for feature_type in object.feature_types.all %}
+<li><a href="{% url 'polymorphic_fks:featuretype-detail' feature_type.pk %}">{{ feature_type.name }}</a></li>
+{% endfor %}
+</ul>
+</body>
+</html>

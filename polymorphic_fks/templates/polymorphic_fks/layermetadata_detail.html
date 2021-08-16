@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Layer Metadata {{ object.pk }}</title>
+</head>
+<body>
+<h1>Service Metadata {{ object.pk }}</h1>
+<p>File identifier: {{ object.file_identifier }}</p>
+<p>Layer: <a href="{% url 'polymorphic_fks:layer-detail' object.layer_id %}">{{ object.layer_id }}</a></p>
+</body>
+</html>
