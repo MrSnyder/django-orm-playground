@@ -69,6 +69,22 @@ class CheckrunsWithMultipleFks(SingleTableView):
     table_class = CheckrunWithMultipleFksTable
     template_name = 'polymorphic_fks/checkruns.html'
 
+    def get_queryset(self):
+        qs = super().get_queryset()
+        return qs.select_related('ogc_service', 'layer', 'feature_type')
+
+    def get_table(self, **kwargs):
+        """
+        Return a table object to use. The table has automatic support for
+        sorting and pagination.
+        """
+        table_class = self.get_table_class()
+        table = table_class(data=self.get_table_data(), **kwargs)
+        table.exclude = tuple(self.request.GET.get('exclude', '').split(','))
+        return RequestConfig(self.request, paginate=self.get_table_pagination(table)).configure(
+            table
+        )
+
 
 class CheckrunsWithFksInChildTables(SingleTableView):
     model = MultiTableBaseCheckrun
@@ -81,6 +97,18 @@ class CheckrunsWithFksInChildTables(SingleTableView):
                                  'multitablecheckrunfeaturetype', 'multitablecheckrundatasetmetadata',
                                  'multitablecheckrunservicemetadata', 'multitablecheckrunlayermetadata',
                                  'multitablecheckrunfeaturetypemetadata')
+
+    def get_table(self, **kwargs):
+        """
+        Return a table object to use. The table has automatic support for
+        sorting and pagination.
+        """
+        table_class = self.get_table_class()
+        table = table_class(data=self.get_table_data(), **kwargs)
+        table.exclude = tuple(self.request.GET.get('exclude', '').split(','))
+        return RequestConfig(self.request, paginate=self.get_table_pagination(table)).configure(
+            table
+        )
 
 
 class CheckrunsWithDjangoPolymorphic(SingleTableView):
@@ -97,3 +125,15 @@ class CheckrunsWithDjangoPolymorphic(SingleTableView):
         # only works when one turns of the polymorphic mode:
         # return qs.non_polymorphic().select_related('djangopolymorphiccheckrunogcservice',
         #                                            'djangopolymorphiccheckrunlayer')
+
+    def get_table(self, **kwargs):
+        """
+        Return a table object to use. The table has automatic support for
+        sorting and pagination.
+        """
+        table_class = self.get_table_class()
+        table = table_class(data=self.get_table_data(), **kwargs)
+        table.exclude = tuple(self.request.GET.get('exclude', '').split(','))
+        return RequestConfig(self.request, paginate=self.get_table_pagination(table)).configure(
+            table
+        )

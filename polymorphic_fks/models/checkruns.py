@@ -74,6 +74,10 @@ class CheckrunWithGenericFk(models.Model):
             return reverse('polymorphic_fks:featuretype-metadata-detail', kwargs={'pk': self._resource_id})
         return None
 
+    @property
+    def resource_name(self):
+        return self.resource.name or 'Unnamed resource'
+
 
 class CheckrunWithMultipleFks(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
@@ -158,6 +162,24 @@ class CheckrunWithMultipleFks(models.Model):
             return reverse('polymorphic_fks:featuretype-metadata-detail', kwargs={'pk': self.feature_type_metadata_id})
         return None
 
+    @property
+    def resource_name(self):
+        if self.ogc_service_id:
+            return self.ogc_service.name
+        elif self.layer_id:
+            return self.layer.name
+        elif self.feature_type_id:
+            return self.feature_type.name
+        elif self.dataset_metadata_id:
+            return 'Unnamed resource'
+        elif self.service_metadata_id:
+            return 'Unnamed resource'
+        elif self.layer_metadata_id:
+            return 'Unnamed resource'
+        elif self.feature_type_metadata_id:
+            return 'Unnamed resource'
+        return None
+
 
 class MultiTableBaseCheckrun(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
@@ -213,6 +235,17 @@ class MultiTableBaseCheckrun(models.Model):
                            kwargs={'pk': self.multitablecheckrunfeaturetypemetadata.id})
         return None
 
+    @property
+    def resource_name(self):
+        resource = (getmodelattr(self, 'multitablecheckrunogcservice') \
+                    or getmodelattr(self, 'multitablecheckrunlayer') \
+                    or getmodelattr(self, 'multitablecheckrunfeaturetype') \
+                    or getmodelattr(self, 'multitablecheckrundatasetmetadata') \
+                    or getmodelattr(self, 'multitablecheckrunservicemetadata') \
+                    or getmodelattr(self, 'multitablecheckrunlayermetadata') \
+                    or getmodelattr(self, 'multitablecheckrunfeaturetypemetadata')).resource
+        return getmodelattr(resource, 'name', 'Unnamed resource')
+
 
 class MultiTableCheckrunOgcService(MultiTableBaseCheckrun):
     resource = models.ForeignKey(to=OgcService, on_delete=models.CASCADE)
@@ -258,6 +291,10 @@ class DjangoPolymorphicCheckrunOgcService(DjangoPolymorphicBaseCheckrun):
     def resource_url(self):
         return reverse('polymorphic_fks:ogcservice-detail', kwargs={'pk': self.resource.id})
 
+    @property
+    def resource_name(self):
+        return self.resource.name
+
 
 class DjangoPolymorphicCheckrunLayer(DjangoPolymorphicBaseCheckrun):
     resource = models.ForeignKey(to=Layer, on_delete=models.CASCADE)
@@ -269,6 +306,10 @@ class DjangoPolymorphicCheckrunLayer(DjangoPolymorphicBaseCheckrun):
     @property
     def resource_url(self):
         return reverse('polymorphic_fks:layer-detail', kwargs={'pk': self.resource.id})
+
+    @property
+    def resource_name(self):
+        return self.resource.name
 
 
 class DjangoPolymorphicCheckrunFeatureType(DjangoPolymorphicBaseCheckrun):
@@ -282,6 +323,10 @@ class DjangoPolymorphicCheckrunFeatureType(DjangoPolymorphicBaseCheckrun):
     def resource_url(self):
         return reverse('polymorphic_fks:featuretype-detail', kwargs={'pk': self.resource.id})
 
+    @property
+    def resource_name(self):
+        return self.resource.name
+
 
 class DjangoPolymorphicCheckrunDatasetMetadata(DjangoPolymorphicBaseCheckrun):
     resource = models.ForeignKey(to=DatasetMetadata, on_delete=models.CASCADE)
@@ -293,6 +338,10 @@ class DjangoPolymorphicCheckrunDatasetMetadata(DjangoPolymorphicBaseCheckrun):
     @property
     def resource_url(self):
         return reverse('polymorphic_fks:dataset-metadata-detail', kwargs={'pk': self.resource.id})
+
+    @property
+    def resource_name(self):
+        return "An unnamed resource"
 
 
 class DjangoPolymorphicCheckrunServiceMetadata(DjangoPolymorphicBaseCheckrun):
@@ -306,6 +355,10 @@ class DjangoPolymorphicCheckrunServiceMetadata(DjangoPolymorphicBaseCheckrun):
     def resource_url(self):
         return reverse('polymorphic_fks:service-metadata-detail', kwargs={'pk': self.resource.id})
 
+    @property
+    def resource_name(self):
+        return "An unnamed resource"
+
 
 class DjangoPolymorphicCheckrunLayerMetadata(DjangoPolymorphicBaseCheckrun):
     resource = models.ForeignKey(to=LayerMetadata, on_delete=models.CASCADE)
@@ -318,6 +371,10 @@ class DjangoPolymorphicCheckrunLayerMetadata(DjangoPolymorphicBaseCheckrun):
     def resource_url(self):
         return reverse('polymorphic_fks:layer-metadata-detail', kwargs={'pk': self.resource.id})
 
+    @property
+    def resource_name(self):
+        return "An unnamed resource"
+
 
 class DjangoPolymorphicCheckrunFeatureTypeMetadata(DjangoPolymorphicBaseCheckrun):
     resource = models.ForeignKey(to=FeatureTypeMetadata, on_delete=models.CASCADE)
@@ -329,3 +386,7 @@ class DjangoPolymorphicCheckrunFeatureTypeMetadata(DjangoPolymorphicBaseCheckrun
     @property
     def resource_url(self):
         return reverse('polymorphic_fks:featuretype-metadata-detail', kwargs={'pk': self.resource.id})
+
+    @property
+    def resource_name(self):
+        return "An unnamed resource"

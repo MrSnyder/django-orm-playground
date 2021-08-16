@@ -3,14 +3,6 @@ from django_tables2 import tables
 from polymorphic_fks.models import CheckrunWithMultipleFks, MultiTableBaseCheckrun, \
     DjangoPolymorphicBaseCheckrun, CheckrunWithGenericFk
 
-VALUE_ABSOLUTE_LINK = """
-{% if value.get_absolute_url%}
-<a href="{{value.get_absolute_url}}">{{value}}</a>
-{% else %}
-{{value}}
-{% endif %}
-"""
-
 
 class CheckrunWithGenericFkTable(tables.Table):
     linked_resource = tables.columns.TemplateColumn(
@@ -19,7 +11,7 @@ class CheckrunWithGenericFkTable(tables.Table):
     class Meta:
         model = CheckrunWithGenericFk
         template_name = "django_tables2/bootstrap.html"
-        fields = ("id", 'created_at', 'passed')
+        fields = ("id", 'created_at', 'passed', 'resource_name')
 
 
 class CheckrunWithMultipleFksTable(tables.Table):
@@ -29,7 +21,7 @@ class CheckrunWithMultipleFksTable(tables.Table):
     class Meta:
         model = CheckrunWithMultipleFks
         template_name = "django_tables2/bootstrap.html"
-        fields = ("id", 'created_at', 'passed')
+        fields = ("id", 'created_at', 'passed', 'resource_name')
 
 
 class MultiTableBaseCheckrunTable(tables.Table):
@@ -39,7 +31,7 @@ class MultiTableBaseCheckrunTable(tables.Table):
     class Meta:
         model = MultiTableBaseCheckrun
         template_name = "django_tables2/bootstrap.html"
-        fields = ("id", 'created_at', 'passed',)
+        fields = ("id", 'created_at', 'passed', 'resource_name')
 
 
 class DjangoPolymorphicBaseCheckrunTable(tables.Table):
@@ -49,4 +41,4 @@ class DjangoPolymorphicBaseCheckrunTable(tables.Table):
     class Meta:
         model = DjangoPolymorphicBaseCheckrun
         template_name = "django_tables2/bootstrap.html"
-        fields = ("id", 'created_at', 'passed',)
+        fields = ("id", 'created_at', 'passed', 'resource_name')
