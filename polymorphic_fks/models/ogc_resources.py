@@ -95,3 +95,13 @@ class FeatureTypeMetadata(models.Model):
 
     def get_absolute_url(self):
         return reverse('polymorphic_fks:featuretype-metadata-detail', kwargs={'pk': self.pk})
+
+
+class Resource(models.Model):
+    ogc_service = models.ForeignKey(to=OgcService, on_delete=models.CASCADE, null=True)
+    layer = models.ForeignKey(to=Layer, on_delete=models.CASCADE, null=True)
+    feature_type = models.ForeignKey(to=FeatureType, on_delete=models.CASCADE, null=True)
+    dataset_metadata = models.ForeignKey(to=DatasetMetadata, on_delete=models.CASCADE, null=True)
+    service_metadata = models.ForeignKey(to=ServiceMetadata, on_delete=models.CASCADE, null=True)
+    layer_metadata = models.ForeignKey(to=LayerMetadata, on_delete=models.CASCADE, null=True)
+    feature_type_metadata = models.ForeignKey(to=FeatureTypeMetadata, on_delete=models.CASCADE, null=True)

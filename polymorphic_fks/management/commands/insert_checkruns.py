@@ -2,6 +2,7 @@ import random
 from itertools import islice, chain
 
 from django.core.management import BaseCommand
+from django.db import transaction
 
 from polymorphic_fks.models import OgcService, Layer, FeatureType, DatasetMetadata, ServiceMetadata, LayerMetadata, \
     FeatureTypeMetadata
@@ -83,6 +84,7 @@ class Command(BaseCommand):
         else:
             raise ValueError(f"Unhandled resource class: {resource.__class__.__name__}")
 
+    @transaction.atomic
     def handle(self, *args, **options):
         services = OgcService.objects.all()
 
