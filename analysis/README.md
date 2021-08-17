@@ -1,4 +1,4 @@
-# Modelling polymorphic FKs and performance implications
+# Approaches to modelling polymorphic FKs and their implications
 
 ## Problem
 
@@ -103,8 +103,69 @@ the `django_content_type` table.
 
 ## Observations
 
+For the observations, I tried to optimize the query performance by avoiding unnecessary accesses to the linked resource
+when rendering resource links. For the second test that accesses the `name` property of the linked resource, I
+used `select_related` whenever possible.
+
+## SQL queries
+
+|                                  | Django generic FKs | Sparse FKs | Sparse FKs in lookup table | Multi-table Inheritance | django-polymorphic |
+|----------------------------------|:------------------:|:----------:|:--------------------------:|:-----------------------:|:------------------:|
+| Test 1: #SQL queries / time [ms] |       2 / 20       |   2 / 30   |           2 / 35           |          2 / 40         |       29 / 40      |
+| Test 2: #SQL queries / time [ms] |       27 / 40      |   2 / 40   |           2 / 40           |          2 / 40         |       29 / 40      |
+
+Using `django-polymorphic`, it is currently not possible
+to [use `select_related()` on the child classes](https://django-polymorphic.readthedocs.io/en/stable/advanced.html#restrictions-caveats)
+. Therefore, we end up with one query per row (for both tests).
+
+For the Django generic FK approach, `select_related()` can also not be used (on the generic FK). This is not a problem
+in test 1 (as it does not rely on any attributes from the related tables), but test 2 requires subsequent queries to
+retrieve the name attribute from the resource tables.
+
+All other approaches (Sparse FKs, Sparse FKs in lookup table, Multi-table Inheritance) can be tweaked so the n+1 SELECT
+problem is avoided for both test cases.
+
+## CPU time
+
+|                                  | Django generic FKs | Sparse FKs | Sparse FKs in lookup table | Multi-table Inheritance | django-polymorphic |
+|----------------------------------|:------------------:|:----------:|:--------------------------:|:-----------------------:|:------------------:|
+| Test 1: CPU time [ms]            |        ~130        |    ~130    |            ~130            |           ~170          |        ~500        |
+| Test 2: CPU time [ms]            |        ~450        |    ~140    |            ~140            |           ~160          |        ~500        |
+
+When looking at the CPU time report by the Django Debug Toolbar, the numbers for django-polymorphic (test1+2) and Django
+generic FKs (test2) stand out. All other number are between 130ms and 160ms and can be roughly compared.
+
+It is currently not clear, why the view rendering took so much longer for some cases.
+
+## Delete cascading
+
+In principle, the Django generic FK approach has the downside that it does not allow for database-side delete
+cascading (it has to be performed by the Django ORM).
+
+However, for the other modelling approaches Django will also use not use database-level cascading (also it may be
+implemented in the future).
+See [here](https://stackoverflow.com/questions/54751466/django-does-not-honor-on-delete-cascade).
 
 ## Conclusion
+
+The nice thing about the Django generic FK approach is that it is fairly simple and established. However, for this case,
+it shows two downsides:
+
+* It restricts the use of `selected-related` for query optimization, so we end up with 1+n queries for test2
+* It displays a high amount of CPU time used in test 2, although it is currently not clear why this happens exactly.
+
+The django-polymorphic approach is currently not attractive in this case. It displays a high amount of CPU time and
+requires 1+n queries.
+
+When looking at the actual performance numbers for Test 2, the following approaches look favorable:
+
+* Sparse FKs
+* Sparse FKs in lookup table
+* Multi-table Inheritance
+
+As the Multi-table Inheritance approach introduces so much table-clutter, I suggest go with one of the Sparse FK
+approaches as the simpler solutions. As long as we do not have a use-case for a global resource lookup table, the plain
+Sparse FKs approach seems most suitable.
 
 The django application for reproducing the test scenario and performing the benchmarks can be
 found [here](https://github.com/MrSnyder/django-orm-playground).
