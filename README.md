@@ -1,1 +1,1 @@
-# django-orm-playground
+# django-playground

@@ -1,4 +1,4 @@
-"""orm_playground URL Configuration
+"""django_playground URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/3.2/topics/http/urls/
@@ -17,7 +17,7 @@ import debug_toolbar
 from django.contrib import admin
 from django.urls import path, include
 
-from orm_playground.views import HomeView
+from django_playground.views import HomeView
 
 urlpatterns = [
     path('', HomeView.as_view(), name='home'),

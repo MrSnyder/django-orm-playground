@@ -5,5 +5,5 @@ services:
     ports:
       - 5432:5432
     environment:
-      POSTGRES_USER: orm_playground
-      POSTGRES_PASSWORD: orm_playground
+      POSTGRES_USER: django_playground
+      POSTGRES_PASSWORD: django_playground
