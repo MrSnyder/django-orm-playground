@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Django Playground: Inline forms</title>
+</head>
+<body>
+<h1>Django Playground: Inline forms</h1>
+<h2>Persons</h2>
+<ul>
+    <li><a href="{% url 'inline_forms:person-list' %}">List Persons</a></li>
+    <li><a href="{% url 'inline_forms:person-create' %}">Create Person</a></li>
+</ul>
+<h2>Pets</h2>
+<ul>
+    <li><a href="{% url 'inline_forms:pet-list' %}">List Pets</a></li>
+    <li><a href="{% url 'inline_forms:pet-create' %}">Create Pets</a></li>
+</ul>
+</body>
+</html>
+

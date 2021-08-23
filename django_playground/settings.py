@@ -39,7 +39,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_tables2',
     'debug_toolbar',
-    'polymorphic_fks'
+    'inline_forms',
+    'polymorphic_fks',
 ]
 
 MIDDLEWARE = [
