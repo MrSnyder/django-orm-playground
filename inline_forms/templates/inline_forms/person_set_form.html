@@ -10,15 +10,9 @@
     {% csrf_token %}
     {{ form.management_form }}
     {% for form in form %}
-    {% if forloop.last %}
-    <div id="id-person-form-template" class="person-form" style="display:none">
+    <div class="person-form" {% if forloop.last %}style="display:none" {% endif %}>
         {{ form.as_p }}
     </div>
-    {% else %}
-    <div class="person-form">
-        {{ form.as_p }}
-    </div>
-    {% endif %}
     {% endfor %}
     <button onclick="addForm('person');return false;">Gimme another field</button>
     <input type="submit">
