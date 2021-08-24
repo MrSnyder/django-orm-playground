@@ -23,24 +23,31 @@ class PersonCreateView(CreateView):
     success_url = reverse_lazy('inline_forms:person-list')
 
 
+# for FormSets, CreateView (or UpdateView) do not really seem to fit, as they are bound to a single object
+# so, let's use FormView
 class PersonEditAllView(FormView):
-    form_class = modelformset_factory(Person, fields='__all__', extra=3)
+    form_class = modelformset_factory(Person, fields='__all__', extra=3, can_delete=True)
     success_url = reverse_lazy('inline_forms:person-list')
     template_name = 'inline_forms/person_set_form.html'
 
     # FormMixin: Redirects to get_success_url()
     def form_valid(self, form):
-        for person_dict in form.cleaned_data:
-            if person_dict:
-                # 'id' attribute actually *is* the Person for pre-existing entities
-                person = person_dict.get('id', None)
-                del person_dict['id']
-                if person:
-                    for key in person_dict:
-                        setattr(person, key, person_dict[key])
-                else:
-                    person = Person(**person_dict)
-                person.save()
+        # Changed, deleted, updated instances are bound to the formset automatically
+        form.save()
+        print(f"Changed: {len(form.changed_objects)}")
+        print(f"Deleted: {len(form.deleted_objects)}")
+        print(f"Updated: {len(form.new_objects)}")
+        # for person_dict in form.cleaned_data:
+        #     if person_dict:
+        #         # 'id' attribute actually *is* the Person for pre-existing entities
+        #         person = person_dict.get('id', None)
+        #         del person_dict['id']
+        #         if person:
+        #             for key in person_dict:
+        #                 setattr(person, key, person_dict[key])
+        #         else:
+        #             person = Person(**person_dict)
+        #         person.save()
         return super().form_valid(form)
 
 
