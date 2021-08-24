@@ -28,6 +28,7 @@ class Pet(models.Model):
         blank=False,
         null=False
     )
+    created_date = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
         return f"{self.race} {self.name}"

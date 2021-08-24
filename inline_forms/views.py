@@ -3,8 +3,9 @@ from django.db import transaction
 from django.forms import modelformset_factory
 from django.urls import reverse_lazy
 from django.views.generic import TemplateView, ListView, CreateView, FormView
+from extra_views import ModelFormSetView, CreateWithInlinesView
 
-from inline_forms.forms import PersonWithPetsFormSet, PersonForm
+from inline_forms.forms import PersonWithPetsFormSet, PersonForm, PetInline
 from inline_forms.models import Person, Pet
 
 
@@ -53,6 +54,14 @@ class PersonEditAllView(FormView):
         return super().form_valid(form)
 
 
+class PersonFormSetView(ModelFormSetView):
+    model = Person
+    fields = ['first_name', 'last_name', 'created_date']
+    template_name = 'inline_forms/person_formset.html'
+    prefix = 'person'
+    factory_kwargs = {'extra': 1, 'can_delete': True}
+
+
 class PersonWithPetsCreateView(CreateView):
     model = Person
     fields = "__all__"
@@ -75,6 +84,14 @@ class PersonWithPetsCreateView(CreateView):
                 pets.instance = self.object
                 pets.save()
         return super(PersonWithPetsCreateView, self).form_valid(form)
+
+
+class PersonCreateWithPetsInlineView(CreateWithInlinesView):
+    model = Person
+    fields = "__all__"
+    inlines = [PetInline]
+    template_name = 'inline_forms/person_form_inline.html'
+    success_url = reverse_lazy('inline_forms:pet-list')
 
 
 class PetListView(ListView):

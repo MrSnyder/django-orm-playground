@@ -12,10 +12,11 @@
     {% csrf_token %}
     {{ form.as_p }}
 
-    <table>
-        {{ pets.management_form }}
+    {% for formset in inlines %}
+   <table>
+        {{ formset.management_form }}
 
-        {% for form in pets.forms %}
+        {% for form in formset.forms %}
         {% if forloop.first %}
         <thead>
         <tr>
@@ -25,7 +26,7 @@
         </tr>
         </thead>
         {% endif %}
-        <tr class="pet_set-form">
+        <tr class="{{ formset.prefix }}-form">
             {% for field in form.visible_fields %}
             <td>
                 {# Include the hidden fields in the form #}
@@ -41,7 +42,8 @@
         </tr>
         {% endfor %}
     </table>
-    <button onclick="addForm('pet_set');return false;">I have another pet</button>
+    <button onclick="addForm('{{ formset.prefix }}');return false;">Another field, plz</button>
+    {% endfor %}
 
     <input type="submit">
 </form>

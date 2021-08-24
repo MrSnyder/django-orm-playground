@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Django Playground: Edit persons</title>
+</head>
+<h1>Django Playground: Edit persons</h1>
+<form method="post">
+    {% csrf_token %}
+    {{ formset.management_form }}
+    {% for form in formset %}
+    <div class="person-form" {% if forloop.last %}style="display:none" {% endif %}>
+        {{ form.as_p }}
+    </div>
+    {% endfor %}
+    <button onclick="addForm('person');return false;">Gimme another field</button>
+    <input type="submit">
+</form>
+<script src="{% static 'inline_forms/js/formset-helper.js' %}"></script>
+</body>
+</html>

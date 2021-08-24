@@ -10,8 +10,11 @@
 <ul>
     <li><a href="{% url 'inline_forms:person-list' %}">List Persons</a></li>
     <li><a href="{% url 'inline_forms:person-create' %}">Create Person</a></li>
-    <li><a href="{% url 'inline_forms:person-edit-all' %}">Edit/create Persons</a></li>
-    <li><a href="{% url 'inline_forms:person-create-with-pets' %}">Create Person with Pets</a></li>
+    <li><a href="{% url 'inline_forms:person-edit-all' %}">Edit/create Persons (FormView)</a></li>
+    <li><a href="{% url 'inline_forms:person-formset' %}">Edit/create Persons (ModelFormSetView)</a></li>
+    <li><a href="{% url 'inline_forms:person-create-with-pets' %}">Create Person with Pets (CreateView)</a></li>
+    <li><a href="{% url 'inline_forms:person-create-with-pets-inline' %}">Create Person with Pets (CreateWithInlinesView)</a>
+    </li>
 </ul>
 <h2>Pets</h2>
 <ul>
