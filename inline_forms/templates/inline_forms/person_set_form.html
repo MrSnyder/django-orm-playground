@@ -4,12 +4,37 @@
     <meta charset="UTF-8">
     <title>Django Playground: Edit persons</title>
 </head>
-<body>
 <h1>Django Playground: Edit persons</h1>
-</body>
 <form method="post">
     {% csrf_token %}
-    {{ form.as_p }}
+    {{ form.management_form }}
+    {% for form in form %}
+    {% if forloop.last %}
+    <div id="id-person-form-template" class="person-form" style="display:none">
+        {{ form.as_p }}
+    </div>
+    {% else %}
+    <div class="person-form">
+        {{ form.as_p }}
+    </div>
+    {% endif %}
+    {% endfor %}
+    <button onclick="addForm('person');return false;">Gimme another field</button>
     <input type="submit">
 </form>
+<script>
+function addForm(prefix) {
+    const templateForm = document.querySelector(`#id-${prefix}-form-template`);
+    const html = templateForm.innerHTML;
+    const formNum = document.querySelectorAll(`.${prefix}-form`).length;
+    const newHtml = html.replace(RegExp(`${prefix}-\\d+-`, 'g'), `${prefix}-${formNum}-`);
+    const newTemplateForm = templateForm.cloneNode();
+    newTemplateForm.innerHTML = newHtml;
+    templateForm.removeAttribute('id')
+    templateForm.removeAttribute('style')
+    templateForm.after(newTemplateForm);
+    document.querySelector(`#id_${prefix}-TOTAL_FORMS`).value=formNum + 1;
+}
+</script>
+</body>
 </html>

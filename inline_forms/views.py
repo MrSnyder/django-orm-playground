@@ -26,9 +26,11 @@ class PersonCreateView(CreateView):
 # for FormSets, CreateView (or UpdateView) do not really seem to fit, as they are bound to a single object
 # so, let's use FormView
 class PersonEditAllView(FormView):
-    form_class = modelformset_factory(Person, fields='__all__', extra=3, can_delete=True)
+    # by using modelformset_factory, '__all__' does include the id field
+    form_class = modelformset_factory(Person, fields='__all__', extra=1, can_delete=True)
     success_url = reverse_lazy('inline_forms:person-list')
     template_name = 'inline_forms/person_set_form.html'
+    prefix = 'person'
 
     # FormMixin: Redirects to get_success_url()
     def form_valid(self, form):
