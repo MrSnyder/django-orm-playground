@@ -15,23 +15,10 @@
     {% for formset in inlines %}
     <h2>Layers</h2>
     <h3>Layer Tree</h3>
-    <!--    <div id="jstree">-->
-    <!--        &lt;!&ndash; in this example the tree is populated from inline HTML &ndash;&gt;-->
-    <!--        <ul>-->
-    <!--            <li>Root node 1-->
-    <!--                <ul>-->
-    <!--                    <li id="child_node_1">Child node 1</li>-->
-    <!--                    <li>Child node 2</li>-->
-    <!--                </ul>-->
-    <!--            </li>-->
-    <!--            <li>Root node 2</li>-->
-    <!--        </ul>-->
-    <!--    </div>-->
-    <!--    <button>demo button</button>-->
-    <!--    <label for="mapcontext_tree">Ebenen und Datenangebote</label>-->
+
     <div id="mapcontext_tree"
          style="border: 1px solid #ced4da; border-radius: .25rem; padding: .375rem .75rem"
-         class="form-group" data-mapcontext-id="{{ context_id }}">
+         class="form-group">
     </div>
 
     <h3>Layer Formset</h3>
@@ -64,17 +51,18 @@
         </tr>
         {% endfor %}
     </table>
-    <button onclick="addForm('{{ formset.prefix }}');return false;">Another layer, plz</button>
     {% endfor %}
 
     <input type="submit">
 </form>
 
-<link rel="stylesheet" type="text/css" href="{% static '/cbv_trees/css/jstree-default/style.min.css' %}" media="all"/>
-<link rel="stylesheet" type="text/css" href="{% static '/cbv_trees/css/folder-style.css' %}" media="all"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.11/themes/default/style.min.css"
+      integrity="sha512-P8BwDSUInKMA7I116Z1RFg/Dfk85uFdliEUYO7vQlwtxLVMNvZimfMAQsaf++9EhlAGOVX6yhDQAIY3/70jDUg=="
+      crossorigin="anonymous" referrerpolicy="no-referrer"/>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
       integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ=="
       crossorigin="anonymous" referrerpolicy="no-referrer"/>
+<link rel="stylesheet" type="text/css" href="{% static '/cbv_trees/css/folder-style.css' %}" media="all"/>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"
         integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ=="
@@ -84,29 +72,6 @@
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="https://cdn.jsdelivr.net/npm/jstree-actions@0.2.1/jstree-actions.min.js"
         integrity="sha256-9UEvBZl2CzCWCSvHfT1PKY7xfkJBJmRuNeCaUhS66IE=" crossorigin="anonymous"></script>
-<script src="{% static 'inline_forms/js/formset-helper.js' %}"></script>
 <script type="text/javascript" src="{% static '/cbv_trees/js/treeformset-helper.js' %}"></script>
-
-
-<script>
-  $(function () {
-    // 6 create an instance when the DOM is ready
-    $('#jstree').jstree();
-    // 7 bind to events triggered on the tree
-    $('#jstree').on("changed.jstree", function (e, data) {
-      console.log(data.selected);
-    });
-    // 8 interact with the tree - either way is OK
-    $('button').on('click', function () {
-      $('#jstree').jstree(true).select_node('child_node_1');
-      $('#jstree').jstree('select_node', 'child_node_1');
-      $.jstree.reference('#jstree').select_node('child_node_1');
-    });
-  });
-
-
-
-
-</script>
 
 </html>

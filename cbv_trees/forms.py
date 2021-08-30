@@ -56,11 +56,11 @@ class BaseModelTreeFormSet(BaseModelFormSet):
 
 
 class LayerForm(ModelForm):
-    parent_layer_id = forms.CharField(max_length=20, required=False)
+    parent_form_idx = forms.CharField(max_length=20, required=False)
 
     class Meta:
         model = Layer
-        fields = ['id', 'parent', 'parent_layer_id', 'name']
+        fields = ['id', 'parent', 'parent_form_idx', 'name']
 
 
 class LayerTreeInlineFormSet(BaseInlineFormSet):
@@ -86,9 +86,9 @@ class LayerTreeInlineFormSet(BaseInlineFormSet):
             form = self.forms[i]
             if form.cleaned_data.get('DELETE', None):
                 continue
-            parent_layer_id = form.cleaned_data.get("parent_layer_id", None)
-            if parent_layer_id:
-                parent = new_objects[int(parent_layer_id)]
+            parent_form_idx = form.cleaned_data.get("parent_form_idx", None)
+            if parent_form_idx:
+                parent = new_objects[int(parent_form_idx)]
                 form.instance.parent = parent
             else:
                 form.instance.parent = None

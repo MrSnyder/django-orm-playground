@@ -1,23 +1,19 @@
 $(function () {
-  function get_node_by_id(node_id) {
-    return $('#mapcontext_tree').jstree(true).get_node(node_id);
-  }
-  function get_node_name(node) {
-    let name = node.text.trim();
-    if (name !== '/') {
-      return name;
+  const prefix = 'layer';
+    function appendForm() {
+        const forms = document.querySelectorAll(`.${prefix}-form`);
+        const formNum = forms.length;
+        // last form was the spare form -> becomes the new form now
+        const form = forms [formNum - 1];
+        const html = form.innerHTML;
+        const spareHtml = html.replace(RegExp(`${prefix}-\\d+-`, 'g'), `${prefix}-${formNum}-`);
+        const spareForm = form.cloneNode();
+        spareForm.innerHTML = spareHtml;
+        form.after(spareForm);
+        form.removeAttribute('style')
+        document.querySelector(`#id_${prefix}-TOTAL_FORMS`).value=formNum + 1;
     }
-    return '';
-  }
-  function append_layer_form_field() {
-    const layerForms = document.querySelectorAll('.mapcontext_layer_form');
-    const formNum = layerForms.length;
-    const html = layerForms[formNum - 1].outerHTML;
-    const newHtml = html.replace(RegExp('form-\\d+-', 'g'), `form-${formNum}-`);
-    $('.mapcontext_layer_form').last().after(newHtml);
-    $('#id_form-TOTAL_FORMS').val(formNum + 1);
-  }
-  function update_layer_tree_input() {
+  function update_formset() {
     let tree = $('#mapcontext_tree').jstree(true);
     let tree_state = tree.get_json(undefined, {
       flat: true,
@@ -31,22 +27,24 @@ $(function () {
       parent: node.parent,
       data: node.data
     }));
-    $('#id_mapcontext_form input[name="layer_tree"]').val(JSON.stringify(tree_state));
-    const layerForms = $('.mapcontext_layer_form');
+    const layerForms = $('.layer-form');
+    const nodeIdToLayerIdx = {};
     for (i in layerForms) {
         if (i < tree_state.length) {
             const node = tree_state[i];
+            parentLayerIdx = node.parent == '#' ? '' : nodeIdToLayerIdx[node.parent];
+            nodeIdToLayerIdx[node.id] = i;
             layerForms[i].setAttribute('data-jstree-node-id', node.id);
-            $(`#id_form-${i}-title`).val(node.text);
-            $(`#id_form-${i}-id`).val(node.id);
-            $(`#id_form-${i}-parent`).val(node.parent);
-            $(`#id_form-${i}-DELETE`).prop('checked', false);
+            $(`#id_layer-${i}-name`).val(node.text);
+//            $(`#id_layer-${i}-id`).val(node.id);
+            $(`#id_layer-${i}-parent_form_idx`).val(parentLayerIdx);
+            $(`#id_layer-${i}-DELETE`).prop('checked', false);
         } else {
-            $(`#id_form-${i}-title`).val('');
-            $(`#id_form-${i}-id`).val('');
-            $(`#id_form-${i}-parent`).val('');
-            if ($(`#id_form-${i}-id`).val()) {
-                $(`#id_form-${i}-DELETE`).prop('checked', true);
+            $(`#id_layer-${i}-name`).val('');
+            $(`#id_layer-${i}-id`).val('');
+            $(`#id_layer-${i}-parent_form_idx`).val('');
+            if ($(`#id_layer-${i}-id`).val()) {
+                $(`#id_layer-${i}-DELETE`).prop('checked', true);
             }
         }
     }
@@ -62,19 +60,29 @@ $(function () {
         return true;
       },
       "data": function (obj, cb) {
-        const data = [];
+        const nodes = [];
         // TODO configurable
         const layerForms = $('.layer-form');
         for (i = 0; i < layerForms.length - 1; i++) {
-            data.push ({
+            layerForm = layerForms.get(i);
+            console.log(layerForms.get(i));
+            nodes.push ({
                 // TODO configurable
                 id : $(`#id_layer-${i}-id`).val(),
                 parent : $(`#id_layer-${i}-parent`).val() || "#",
-                text : $(`#id_layer-${i}-name`).val()
+                text : $(`#id_layer-${i}-name`).val(),
             });
         }
-        console.log(data);
-        cb.call(this, data);
+        if (nodes.length == 0) {
+            appendForm();
+            nodes.push ({
+                id : 0,
+                parent : '#',
+                text : '/',
+            });
+        }
+        console.log(nodes);
+        cb.call(this, nodes);
       }
     },
     "plugins": ["dnd", "types", "unique", "rename", "actions"],
@@ -96,20 +104,21 @@ $(function () {
       }
     }
   }).on('create_node.jstree', function (e, data) {
-    append_layer_form_field(data.node.id);
-    update_layer_tree_input();
+    console.log("*** create_node");
+    appendForm(data.node.id);
+    update_formset();
   }).on('rename_node.jstree', function (e, data) {
-    update_layer_tree_input();
+    console.log("*** rename_node");
+    update_formset();
   }).on('delete_node.jstree', function (e, data) {
-    update_layer_tree_input();
+    console.log("*** delete_node");
+    update_formset();
+  }).on('move_node.jstree', function (e, data) {
+    console.log("*** move_node");
+    update_formset();
   }).on('select_node.jstree', function (e, data) {
-    $('.mapcontext_layer_form').attr('style','display: none');
-    data.selected.forEach( id => {
-        $(`[data-jstree-node-id=${id}]`).attr('style','display: block');
-    });
-  });
-  $('#mapcontext_tree').on('move_node.jstree', function (e, data) {
-    update_layer_tree_input();
+    console.log("*** select_node");
+    // TODO switch visibility of form?
   });
   let layerTree = $('#mapcontext_tree').jstree(true);
   $('#mapcontext_tree').on('model.jstree', function (e, data) {
