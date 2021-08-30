@@ -7,3 +7,5 @@ services:
     environment:
       POSTGRES_USER: django_playground
       POSTGRES_PASSWORD: django_playground
+    command: ["postgres", "-c", "log_statement=all"]
+

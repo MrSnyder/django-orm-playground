@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django_tables2',
     'debug_toolbar',
     'inline_forms',
+    'cbv_trees',
     'polymorphic_fks',
 ]
 

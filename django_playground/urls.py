@@ -21,6 +21,7 @@ from django_playground.views import HomeView
 
 urlpatterns = [
     path('', HomeView.as_view(), name='home'),
+    path('cbv_trees/', include('cbv_trees.urls')),
     path('inline_forms/', include('inline_forms.urls')),
     path('polymorphic_fks/', include('polymorphic_fks.urls')),
     path('admin/', admin.site.urls),
