@@ -1,56 +1,103 @@
 /**
- * Turns a container element into a dynamic jsTree control and binds it to a Django TreeFormSet.
+ * Turns a container element into a dynamic jsTree control, binding the tree nodes to a Django
+ * FormSet.
+ *
+ * - Each form of the form set must be inside an element of class '${formPrefix}-form'.
+ * - The last form is treated as the template form for creating new forms dynamically.
+ * - There must be a parent fk form field and an accompanying field '${parentField}_form_idx'.
  *
  * @param {string} treeContainerId - the id of the container element (must include '#')
  * @param {string} formPrefix - prefix of classes and ids of the formsets
+ * @param {string} parentField - form field that contains the parent fk
  */
-function initJsTreeFormset(treeContainerId, formPrefix) {
+function initJsTreeFormset(treeContainerId, formPrefix, parentField) {
+  /**
+   * Replaces all Django-generated id (e.g. 'id_layer-1-name') and name attributes (e.g.
+   * 'id_layer-1-name') inside the given form element.
+   *
+   * @param {*} el element, will be recursively adapted
+   * @param {*} newFormIdx new index (zero-based)
+   */
+  function replaceNameAndIdAttributes(el, newFormIdx) {
+    function replaceNameOrId(txt) {
+      return txt.replace(RegExp(`${formPrefix}-\\d+-`, 'g'), `${formPrefix}-${newFormIdx}-`);
+    }
+    if (el.id) {
+      el.id = replaceNameOrId(el.id, newFormIdx);
+    }
+    if (el.getAttribute('name')) {
+      el.setAttribute("name", replaceNameOrId(el.getAttribute('name'), newFormIdx));
+    }
+    Array.from(el.children).forEach(child => {
+      replaceNameAndIdAttributes(child, newFormIdx);
+    });
+  }
+  /**
+   * Clones the last element of class '.${formPrefix}-form' (which is the spare form / form
+   * template).
+   *
+   * Also fixes the ids/names of the new template element to reflect the new form id.
+   *
+   * @returns new number of forms (not counting the template)
+   */
   function appendForm() {
     const forms = document.querySelectorAll(`.${formPrefix}-form`);
     const formNum = forms.length;
     // last form was the template form -> becomes the new form
     const form = forms[formNum - 1];
     const html = form.innerHTML;
-    const templateHtml = html.replace(RegExp(`${formPrefix}-\\d+-`, 'g'), `${formPrefix}-${formNum}-`);
-    const templateForm = form.cloneNode();
-    templateForm.innerHTML = templateHtml;
+    const templateForm = form.cloneNode(true);
+    replaceNameAndIdAttributes(templateForm, formNum);
     form.after(templateForm);
     form.removeAttribute('style')
     // update number of forms in management form
     // https://docs.djangoproject.com/en/3.2/topics/forms/formsets/#understanding-the-managementform
     document.querySelector(`#id_${formPrefix}-TOTAL_FORMS`).value = formNum + 1;
+    return formNum;
   }
+  /**
+   * Updates the forms to match the nodes in the jsTree instance.
+   */
   function updateFormset() {
-    // get the tree's nodes (in topological order, so a parent always precedes its children)
-    let treeState = jsTree.get_json(undefined, {
+    // get the tree's nodes (in topological order, so a parent does always precede its children)
+    let nodes = jsTree.get_json(undefined, {
       flat: true,
       no_a_attr: true,
       no_li_attr: true,
       no_state: true
-    }).map(node => ({
-      id: node.id,
-      text: node.text,
-      type: node.type,
-      parent: node.parent,
-      data: node.data
-    }));
-    const forms = $(`.${formPrefix}-form`);
+    });
+
+    // determine forms and their order
+    const formsInOrder = [];
     const nodeIdToFormIdx = {};
-    for (i in forms) {
-      if (i < treeState.length) {
-        const node = treeState[i];
-        parentFormIdx = node.parent == '#' ? '' : nodeIdToFormIdx[node.parent];
+    let forms = $(`.${formPrefix}-form`);
+    for (i = 0; i < forms.length - 1; i++) {
+      const form = forms[i];
+      if (i < nodes.length) {
+        const node = nodes[i];
+        const nodeForm = forms[node.data.formIdx];
+        formsInOrder.push(nodeForm);
+        // update form idx of node
+        node.data.formIdx = i;
+        jsTree.get_node(node.id).data.formIdx = i;
         nodeIdToFormIdx[node.id] = i;
-        $(`#id_${formPrefix}-${i}-name`).val(node.text);
-        $(`#id_${formPrefix}-${i}-parent_form_idx`).val(parentFormIdx);
-        $(`#id_${formPrefix}-${i}-DELETE`).prop('checked', false);
-      } else {
-        $(`#id_${formPrefix}-${i}-name`).val('');
-        $(`#id_${formPrefix}-${i}-id`).val('');
-        $(`#id_${formPrefix}-${i}-parent_form_idx`).val('');
-        $(`#id_${formPrefix}-${i}-DELETE`).prop('checked', true);
       }
+      form.parentElement.removeChild(form);
     }
+
+    // re-add forms to DOM in order
+    const templateForm = $(`.${formPrefix}-form`).last()[0];
+    for (i = 0; i < formsInOrder.length; i++) {
+      replaceNameAndIdAttributes(formsInOrder[i], i);
+      templateForm.parentElement.insertBefore(formsInOrder[i], templateForm);
+    }
+
+    // update name and parent form idx
+    nodes.forEach(node => {
+      $(`#id_${formPrefix}-${node.data.formIdx}-name`).val(node.text);
+      parentFormIdx = node.parent == '#' ? '' : nodeIdToFormIdx[node.parent];
+      $(`#id_${formPrefix}-${node.data.formIdx}-${parentField}_form_idx`).val(parentFormIdx);
+    });
   }
   $(treeContainerId).jstree({
     "core": {
@@ -65,23 +112,29 @@ function initJsTreeFormset(treeContainerId, formPrefix) {
       "data": function (obj, cb) {
         const nodes = [];
         const forms = $(`.${formPrefix}-form`);
+        // form nodes have to be in topological order, so a parent does always precede its children)
         for (i = 0; i < forms.length - 1; i++) {
           nodes.push({
             id: $(`#id_${formPrefix}-${i}-id`).val(),
-            parent: $(`#id_${formPrefix}-${i}-parent`).val() || "#",
-            text: $(`#id_${formPrefix}-${i}-name`).val()
+            parent: $(`#id_${formPrefix}-${i}-${parentField}`).val() || "#",
+            text: $(`#id_${formPrefix}-${i}-name`).val(),
+            data: {
+              formIdx: i
+            }
           });
         }
         if (forms.length === 1) {
-          // initial invocation, just template form present -> create root
+          // initial invocation, just template form present -> create root node
           appendForm();
           $(`#id_${formPrefix}-0-name`).val('/');
           nodes.push({
             parent: '#',
-            text: '/'
+            text: '/',
+            data: {
+              formIdx: 0
+            }
           });
         }
-        console.log(nodes);
         cb.call(this, nodes);
       }
     },
@@ -104,7 +157,9 @@ function initJsTreeFormset(treeContainerId, formPrefix) {
       }
     }
   }).on('create_node.jstree', function (e, data) {
-    appendForm();
+    data.node.data = {
+      formIdx: appendForm() - 1
+    }
     updateFormset();
   }).on('rename_node.jstree', function (e, data) {
     updateFormset();

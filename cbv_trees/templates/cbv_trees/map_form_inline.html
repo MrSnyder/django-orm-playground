@@ -34,8 +34,9 @@
             {% endfor %}
         </tr>
         </thead>
+        <tbody id="{{ formset.prefix }}-forms">
         {% endif %}
-        <tr class="{{ formset.prefix }}-form" {% if forloop.last %}style="display:none" {% endif %}>
+        <tr class="{{ formset.prefix }}-form">
             {% for field in form.visible_fields %}
             <td>
                 {# Include the hidden fields in the form #}
@@ -50,6 +51,7 @@
             {% endfor %}
         </tr>
         {% endfor %}
+        </tbody>
     </table>
     {% endfor %}
 
@@ -75,7 +77,7 @@
 
 <script type="text/javascript" src="{% static '/cbv_trees/js/treeformset-helper.js' %}"></script>
 <script>
-    initJsTreeFormset('#mapcontext_tree', 'layer')
+    initJsTreeFormset('#mapcontext_tree', 'layer', 'parent');
 </script>
 
 </html>

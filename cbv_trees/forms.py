@@ -1,5 +1,6 @@
 from django import forms
-from django.forms import ModelForm, BaseModelFormSet, BaseInlineFormSet
+from django.forms import ModelForm, BaseModelFormSet, BaseInlineFormSet, CharField, IntegerField, Textarea, NumberInput, \
+    TextInput
 from extra_views import InlineFormSetFactory
 
 from cbv_trees.models import TreeNode, Layer
@@ -60,6 +61,10 @@ class LayerForm(ModelForm):
 
     class Meta:
         model = Layer
+        widgets = {
+            'id': TextInput(),
+            'parent': TextInput()
+        }
         fields = ['id', 'parent', 'parent_form_idx', 'name']
 
 
@@ -103,7 +108,7 @@ class LayerTreeInlineFormSet(BaseInlineFormSet):
 
 class LayerInline(InlineFormSetFactory):
     model = Layer
-    #fields = '__all__'
+    # fields = '__all__'
     form_class = LayerForm
     prefix = 'layer'
     factory_kwargs = {'extra': 1, 'can_delete': True, 'formset': LayerTreeInlineFormSet}
