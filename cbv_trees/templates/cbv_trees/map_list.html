@@ -8,11 +8,12 @@
 <h1>Django Playground: List maps</h1>
 <h1>Maps</h1>
 <ul>
-{% for map in object_list %}
-    <li>{{ map.name }} #layers: {{ map.layer_set.all | length }}</li>
-{% empty %}
+    {% for map in object_list %}
+    <li>{{ map.name }} #layers: {{ map.layer_set.all | length }} <a
+            href="{% url 'cbv_trees:map-update-with-layers-inline' map.pk %}">Update (with layers)</a></li>
+    {% empty %}
     <li>No maps yet.</li>
-{% endfor %}
+    {% endfor %}
 </ul>
 </body>
 </html>

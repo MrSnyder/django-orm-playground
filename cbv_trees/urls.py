@@ -2,8 +2,8 @@ from django.urls import path
 from django.views.generic import TemplateView, ListView
 
 from cbv_trees.models import Map
-from cbv_trees.views import TreeNodeFormSetView, TreeNodeCreateView, TreeNodeListView, MapCreateWithLayersInlineView
-from inline_forms.views import PersonCreateWithPetsInlineView
+from cbv_trees.views import TreeNodeFormSetView, TreeNodeCreateView, TreeNodeListView, MapCreateWithLayersInlineView, \
+    MapUpdateWithLayersInlineView
 
 app_name = 'cbv_trees'
 urlpatterns = [
@@ -15,4 +15,6 @@ urlpatterns = [
     path('map/list', ListView.as_view(model=Map), name='map-list'),
     path('map/create-with-layers-inline', MapCreateWithLayersInlineView.as_view(),
          name='map-create-with-layers-inline'),
+    path('map/<pk>/update-with-layers-inline', MapUpdateWithLayersInlineView.as_view(),
+         name='map-update-with-layers-inline'),
 ]

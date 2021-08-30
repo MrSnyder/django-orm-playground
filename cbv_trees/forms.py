@@ -71,12 +71,12 @@ class LayerTreeInlineFormSet(BaseInlineFormSet):
         as necessary, and return the list of instances.
         """
 
-        # # delete all forms that existed before
-        # for form in self.forms:
-        #     existing_object = form.cleaned_data.get('id', None)
-        #     if existing_object:
-        #         print(f"Deleting... {existing_object}")
-        #         existing_object.delete()
+        # delete all forms that existed before
+        for form in self.forms:
+            existing_object = form.cleaned_data.get('id', None)
+            if existing_object:
+                print(f"Deleting... {existing_object}")
+                existing_object.delete()
 
         new_objects = []
         # ignore the last form (this is the template form)
@@ -91,9 +91,12 @@ class LayerTreeInlineFormSet(BaseInlineFormSet):
                 form.instance.parent = parent
             else:
                 form.instance.parent = None
-            instance = self.save_new(form, True)
-            new_objects.append(instance)
-            print(f"Saved {instance}")
+            model_instance = form.save(commit=False)
+            # ensure that there are no left-over values for MPTT-specific fields (lft, rght, tree_id, level)
+            clean_model_instance = Layer(name=model_instance.name, map=model_instance.map, parent=model_instance.parent)
+            clean_model_instance.save()
+            new_objects.append(clean_model_instance)
+            print(f"Saved {clean_model_instance}")
         return new_objects
 
 
