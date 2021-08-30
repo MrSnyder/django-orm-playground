@@ -72,14 +72,16 @@ function initJsTreeFormset(treeContainerId, formPrefix) {
             text: $(`#id_${formPrefix}-${i}-name`).val()
           });
         }
-        if (nodes.length == 0) {
+        if (forms.length === 1) {
+          // initial invocation, just template form present -> create root
           appendForm();
+          $(`#id_${formPrefix}-0-name`).val('/');
           nodes.push({
-            id: 0,
             parent: '#',
-            text: '/',
+            text: '/'
           });
         }
+        console.log(nodes);
         cb.call(this, nodes);
       }
     },
