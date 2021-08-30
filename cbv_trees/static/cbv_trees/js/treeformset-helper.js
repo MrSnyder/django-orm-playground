@@ -1,20 +1,28 @@
+/**
+ * Turns a container element into a dynamic jsTree control and binds it to a Django TreeFormSet.
+ *
+ * @param {string} treeContainerId - the id of the container element (must include '#')
+ * @param {string} formPrefix - prefix of classes and ids of the formsets
+ */
 function initJsTreeFormset(treeContainerId, formPrefix) {
   function appendForm() {
     const forms = document.querySelectorAll(`.${formPrefix}-form`);
     const formNum = forms.length;
-    // last form was the spare form -> becomes the new form now
+    // last form was the template form -> becomes the new form
     const form = forms[formNum - 1];
     const html = form.innerHTML;
-    const spareHtml = html.replace(RegExp(`${formPrefix}-\\d+-`, 'g'), `${formPrefix}-${formNum}-`);
-    const spareForm = form.cloneNode();
-    spareForm.innerHTML = spareHtml;
-    form.after(spareForm);
+    const templateHtml = html.replace(RegExp(`${formPrefix}-\\d+-`, 'g'), `${formPrefix}-${formNum}-`);
+    const templateForm = form.cloneNode();
+    templateForm.innerHTML = templateHtml;
+    form.after(templateForm);
     form.removeAttribute('style')
+    // update number of forms in management form
+    // https://docs.djangoproject.com/en/3.2/topics/forms/formsets/#understanding-the-managementform
     document.querySelector(`#id_${formPrefix}-TOTAL_FORMS`).value = formNum + 1;
   }
-  function update_formset() {
-    let tree = $('#mapcontext_tree').jstree(true);
-    let tree_state = tree.get_json(undefined, {
+  function updateFormset() {
+    // get the tree's nodes (in topological order, so a parent always precedes its children)
+    let treeState = jsTree.get_json(undefined, {
       flat: true,
       no_a_attr: true,
       no_li_attr: true,
@@ -26,51 +34,42 @@ function initJsTreeFormset(treeContainerId, formPrefix) {
       parent: node.parent,
       data: node.data
     }));
-    const layerForms = $('.layer-form');
-    const nodeIdToLayerIdx = {};
-    for (i in layerForms) {
-      if (i < tree_state.length) {
-        const node = tree_state[i];
-        parentLayerIdx = node.parent == '#' ? '' : nodeIdToLayerIdx[node.parent];
-        nodeIdToLayerIdx[node.id] = i;
-        layerForms[i].setAttribute('data-jstree-node-id', node.id);
-        $(`#id_layer-${i}-name`).val(node.text);
-        //            $(`#id_layer-${i}-id`).val(node.id);
-        $(`#id_layer-${i}-parent_form_idx`).val(parentLayerIdx);
-        $(`#id_layer-${i}-DELETE`).prop('checked', false);
+    const forms = $(`.${formPrefix}-form`);
+    const nodeIdToFormIdx = {};
+    for (i in forms) {
+      if (i < treeState.length) {
+        const node = treeState[i];
+        parentFormIdx = node.parent == '#' ? '' : nodeIdToFormIdx[node.parent];
+        nodeIdToFormIdx[node.id] = i;
+        $(`#id_${formPrefix}-${i}-name`).val(node.text);
+        $(`#id_${formPrefix}-${i}-parent_form_idx`).val(parentFormIdx);
+        $(`#id_${formPrefix}-${i}-DELETE`).prop('checked', false);
       } else {
-        $(`#id_layer-${i}-name`).val('');
-        $(`#id_layer-${i}-id`).val('');
-        $(`#id_layer-${i}-parent_form_idx`).val('');
-        if ($(`#id_layer-${i}-id`).val()) {
-          $(`#id_layer-${i}-DELETE`).prop('checked', true);
-        }
+        $(`#id_${formPrefix}-${i}-name`).val('');
+        $(`#id_${formPrefix}-${i}-id`).val('');
+        $(`#id_${formPrefix}-${i}-parent_form_idx`).val('');
+        $(`#id_${formPrefix}-${i}-DELETE`).prop('checked', true);
       }
     }
   }
-  $('#mapcontext_tree').jstree({
+  $(treeContainerId).jstree({
     "core": {
-      "check_callback": function (operation, node, node_parent, node_position, more) {
+      "check_callback": function (operation, node, nodeParent, nodePosition, more) {
         // operation can be 'create_node', 'rename_node', 'delete_node', 'move_node', 'copy_node' or 'edit'
         // in case of 'rename_node' node_position is filled with the new node name
         if (operation === 'move_node') {
-          return typeof node_parent.text !== 'undefined';
+          return typeof nodeParent.text !== 'undefined';
         }
         return true;
       },
       "data": function (obj, cb) {
         const nodes = [];
-        // TODO configurable
-        const layerForms = $('.layer-form');
-        for (i = 0; i < layerForms.length - 1; i++) {
-          layerForm = layerForms.get(i);
-          console.log(layerForms.get(i));
-
+        const forms = $(`.${formPrefix}-form`);
+        for (i = 0; i < forms.length - 1; i++) {
           nodes.push({
-            // TODO configurable
-            id: $(`#id_layer-${i}-id`).val(),
-            parent: $(`#id_layer-${i}-parent`).val() || "#",
-            text: $(`#id_layer-${i}-name`).val()
+            id: $(`#id_${formPrefix}-${i}-id`).val(),
+            parent: $(`#id_${formPrefix}-${i}-parent`).val() || "#",
+            text: $(`#id_${formPrefix}-${i}-name`).val()
           });
         }
         if (nodes.length == 0) {
@@ -103,80 +102,77 @@ function initJsTreeFormset(treeContainerId, formPrefix) {
       }
     }
   }).on('create_node.jstree', function (e, data) {
-    appendForm(data.node.id);
-    update_formset();
+    appendForm();
+    updateFormset();
   }).on('rename_node.jstree', function (e, data) {
-    update_formset();
+    updateFormset();
   }).on('delete_node.jstree', function (e, data) {
-    update_formset();
+    updateFormset();
   }).on('move_node.jstree', function (e, data) {
-    update_formset();
+    updateFormset();
   }).on('select_node.jstree', function (e, data) {
     // TODO switch visibility of form?
   });
-  let layerTree = $('#mapcontext_tree').jstree(true);
-  $('#mapcontext_tree').on('model.jstree', function (e, data) {
-    data.nodes.forEach(node_id => {
-      let node = layerTree.get_node(node_id);
+  const jsTree = $(treeContainerId).jstree(true);
+  $(treeContainerId).on('model.jstree', function (e, data) {
+    data.nodes.forEach(nodeId => {
+      let node = jsTree.get_node(nodeId);
       if (node.type === 'default') {
-        layerTree.add_action(node_id, {
+        jsTree.add_action(nodeId, {
           "id": "action_add_folder",
           "class": "fas fa-plus-circle pull-right",
           "title": "Add Folder",
           "after": true,
           "selector": "a",
           "event": "click",
-          "callback": function (node_id, node, action_id, action_el) {
-            let jstree = $('#mapcontext_tree').jstree(true);
-            jstree.create_node(node, {}, "last", function (new_node) {
+          "callback": function (nodeId, node, action_id, action_el) {
+            jsTree.create_node(node, {}, "last", function (newNode) {
               try {
-                jstree.edit(new_node);
+                jsTree.edit(newNode);
               } catch (ex) {
-                setTimeout(function () { inst.edit(new_node); }, 0);
+                setTimeout(function () { inst.edit(newNode); }, 0);
               }
             });
           }
         });
         if (node.parent !== '#') {
-          layerTree.add_action(node_id, {
+          jsTree.add_action(nodeId, {
             "id": "action_remove",
             "class": "fas fa-minus-circle pull-right",
             "title": "Remove Child",
             "after": true,
             "selector": "a",
             "event": "click",
-            "callback": function (node_id, node, action_id, action_el) {
-              let jstree = $('#mapcontext_tree').jstree(true);
-              jstree.delete_node(node);
+            "callback": function (nodeId, node) {
+              jsTree.delete_node(node);
             }
           });
         }
-        layerTree.add_action(node_id, {
+        jsTree.add_action(nodeId, {
           "id": "action_edit",
           "class": "fas fa-edit pull-right",
           "title": "Edit",
           "after": true,
           "selector": "a",
           "event": "click",
-          "callback": function (node_id, node, action_id, action_el) {
-            let jstree = $('#mapcontext_tree').jstree(true);
-            jstree.edit(node.id);
+          "callback": function (nodeId, node) {
+            jsTree.edit(node.id);
           }
         });
       } else if (node.type === 'resource') {
-        layerTree.add_action(node_id, {
+        jsTree.add_action(nodeId, {
           "id": "action_remove",
           "class": "fas fa-minus-circle pull-right",
           "title": "Remove",
           "after": true,
           "selector": "a",
           "event": "click",
-          "callback": function (node_id, node, action_id, action_el) {
-            let jstree = $('#mapcontext_tree').jstree(true);
-            jstree.delete_node(node);
+          "callback": function (nodeId, node) {
+            jsTree.delete_node(node);
           }
         });
       }
     });
   });
+  return jsTree;
 }
