@@ -72,6 +72,7 @@ class LayerTreeInlineFormSet(BaseInlineFormSet):
         """
 
         # delete all forms that existed before
+        # TODO better delete all objects related to the "instance"?
         for form in self.forms:
             existing_object = form.cleaned_data.get('id', None)
             if existing_object:
