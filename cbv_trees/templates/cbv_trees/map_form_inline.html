@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Django Playground: Create a map</title>
+</head>
+<body>
+<h1>Django Playground: Create a map</h1>
+</body>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+
+    {% for formset in inlines %}
+    <h2>Layers</h2>
+    <table>
+        {{ formset.management_form }}
+
+        {% for form in formset.forms %}
+        {% if forloop.first %}
+        <thead>
+        <tr>
+            {% for field in form.visible_fields %}
+            <th>{{ field.label|capfirst }}</th>
+            {% endfor %}
+        </tr>
+        </thead>
+        {% endif %}
+        <tr class="{{ formset.prefix }}-form" {% if forloop.last %}style="display:none" {% endif %}>
+            {% for field in form.visible_fields %}
+            <td>
+                {# Include the hidden fields in the form #}
+                {% if forloop.first %}
+                {% for hidden in form.hidden_fields %}
+                {{ hidden }}
+                {% endfor %}
+                {% endif %}
+                {{ field.errors.as_ul }}
+                {{ field }}
+            </td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </table>
+    <button onclick="addForm('{{ formset.prefix }}');return false;">Another layer, plz</button>
+    {% endfor %}
+
+    <input type="submit">
+</form>
+<script src="{% static 'inline_forms/js/formset-helper.js' %}"></script>
+</html>

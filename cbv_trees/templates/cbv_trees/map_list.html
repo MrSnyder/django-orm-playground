@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Django Playground: List maps</title>
+</head>
+<body>
+<h1>Django Playground: List maps</h1>
+<h1>Maps</h1>
+<ul>
+{% for map in object_list %}
+    <li>{{ map.name }} #layers: {{ map.layer_set.all | length }}</li>
+{% empty %}
+    <li>No maps yet.</li>
+{% endfor %}
+</ul>
+</body>
+</html>

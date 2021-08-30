@@ -1,7 +1,8 @@
 from django import forms
-from django.forms import ModelForm, BaseModelFormSet
+from django.forms import ModelForm, BaseModelFormSet, BaseInlineFormSet
+from extra_views import InlineFormSetFactory
 
-from cbv_trees.models import TreeNode
+from cbv_trees.models import TreeNode, Layer
 
 
 class TreeNodeForm(ModelForm):
@@ -52,3 +53,53 @@ class BaseModelTreeFormSet(BaseModelFormSet):
             new_objects.append(clean_model_instance)
             print(f"Saved {clean_model_instance}")
         return new_objects
+
+
+class LayerForm(ModelForm):
+    parent_layer_id = forms.CharField(max_length=20, required=False)
+
+    class Meta:
+        model = Layer
+        fields = ['id', 'parent', 'parent_layer_id', 'name']
+
+
+class LayerTreeInlineFormSet(BaseInlineFormSet):
+
+    def save(self, commit=True):
+        """
+        Save model instances for every form, adding and changing instances
+        as necessary, and return the list of instances.
+        """
+
+        # # delete all forms that existed before
+        # for form in self.forms:
+        #     existing_object = form.cleaned_data.get('id', None)
+        #     if existing_object:
+        #         print(f"Deleting... {existing_object}")
+        #         existing_object.delete()
+
+        new_objects = []
+        # ignore the last form (this is the template form)
+        total_forms = self.management_form.cleaned_data['TOTAL_FORMS'] - 1
+        for i in range(0, total_forms):
+            form = self.forms[i]
+            if form.cleaned_data.get('DELETE', None):
+                continue
+            parent_layer_id = form.cleaned_data.get("parent_layer_id", None)
+            if parent_layer_id:
+                parent = new_objects[int(parent_layer_id)]
+                form.instance.parent = parent
+            else:
+                form.instance.parent = None
+            instance = self.save_new(form, True)
+            new_objects.append(instance)
+            print(f"Saved {instance}")
+        return new_objects
+
+
+class LayerInline(InlineFormSetFactory):
+    model = Layer
+    #fields = '__all__'
+    form_class = LayerForm
+    prefix = 'layer'
+    factory_kwargs = {'extra': 1, 'can_delete': True, 'formset': LayerTreeInlineFormSet}
