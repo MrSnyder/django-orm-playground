@@ -40,3 +40,7 @@ class MapUpdateWithLayersInlineView(UpdateWithInlinesView):
     inlines = [LayerInline]
     template_name = 'cbv_trees/map_form_inline.html'
     success_url = reverse_lazy('cbv_trees:map-list')
+
+    def get_initial(self):
+        initial = super().get_initial()
+        return initial
