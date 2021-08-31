@@ -47,7 +47,6 @@ function initJsTreeFormset(treeContainerId, formPrefix, parentField, nameField) 
     const formNum = forms.length;
     // last form was the template form -> becomes the new form
     const form = forms[formNum - 1];
-    const html = form.innerHTML;
     const templateForm = form.cloneNode(true);
     replaceNameAndIdAttributes(templateForm, formNum);
     form.after(templateForm);
@@ -100,6 +99,14 @@ function initJsTreeFormset(treeContainerId, formPrefix, parentField, nameField) 
       parentFormIdx = node.parent == '#' ? '' : nodeIdToFormIdx[node.parent];
       $(`#id_${formPrefix}-${node.data.formIdx}-${parentField}_form_idx`).val(parentFormIdx);
     });
+
+    // update template form and management form
+    replaceNameAndIdAttributes(templateForm, formsInOrder.length);
+    // update number of forms in management form
+    // https://docs.djangoproject.com/en/3.2/topics/forms/formsets/#understanding-the-managementform
+    document.querySelector(`#id_${formPrefix}-TOTAL_FORMS`).value = formsInOrder.length + 1;
+    // TODO instead of removing originally present forms, keep them and mark them as deleted
+    document.querySelector(`#id_${formPrefix}-INITIAL_FORMS`).value = 0;
   }
   $(treeContainerId).jstree({
     "core": {
