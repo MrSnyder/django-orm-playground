@@ -5,12 +5,14 @@
  * - Each form of the form set must be inside an element of class '${formPrefix}-form'.
  * - The last form is treated as the template form for creating new forms dynamically.
  * - There must be a parent fk form field and an accompanying field '${parentField}_form_idx'.
+ * - There must be a text form field for storing the node name.
  *
  * @param {string} treeContainerId - the id of the container element (must include '#')
  * @param {string} formPrefix - prefix of classes and ids of the formsets
  * @param {string} parentField - form field that contains the parent fk
+ * @param {string} nameField - form field that contains the node name
  */
-function initJsTreeFormset(treeContainerId, formPrefix, parentField) {
+function initJsTreeFormset(treeContainerId, formPrefix, parentField, nameField) {
   /**
    * Replaces all Django-generated id (e.g. 'id_layer-1-name') and name attributes (e.g.
    * 'id_layer-1-name') inside the given form element.
@@ -94,7 +96,7 @@ function initJsTreeFormset(treeContainerId, formPrefix, parentField) {
 
     // update name and parent form idx
     nodes.forEach(node => {
-      $(`#id_${formPrefix}-${node.data.formIdx}-name`).val(node.text);
+      $(`#id_${formPrefix}-${node.data.formIdx}-${nameField}`).val(node.text);
       parentFormIdx = node.parent == '#' ? '' : nodeIdToFormIdx[node.parent];
       $(`#id_${formPrefix}-${node.data.formIdx}-${parentField}_form_idx`).val(parentFormIdx);
     });
@@ -112,21 +114,10 @@ function initJsTreeFormset(treeContainerId, formPrefix, parentField) {
       "data": function (obj, cb) {
         const nodes = [];
         const forms = $(`.${formPrefix}-form`);
-        // form nodes have to be in topological order, so a parent does always precede its children)
-        for (i = 0; i < forms.length - 1; i++) {
-          nodes.push({
-            id: $(`#id_${formPrefix}-${i}-id`).val(),
-            parent: $(`#id_${formPrefix}-${i}-${parentField}`).val() || "#",
-            text: $(`#id_${formPrefix}-${i}-name`).val(),
-            data: {
-              formIdx: i
-            }
-          });
-        }
         if (forms.length === 1) {
-          // initial invocation, just template form present -> create root node
+          // just a template form present -> create root node
           appendForm();
-          $(`#id_${formPrefix}-0-name`).val('/');
+          $(`#id_${formPrefix}-0-${nameField}`).val('/');
           nodes.push({
             parent: '#',
             text: '/',
@@ -134,6 +125,25 @@ function initJsTreeFormset(treeContainerId, formPrefix, parentField) {
               formIdx: 0
             }
           });
+        } else {
+          // form nodes have to be in topological order, so a parent does always precede its children)
+          const idToFormIdx = {};
+          for (i = 0; i < forms.length - 1; i++) {
+            id = $(`#id_${formPrefix}-${i}-id`).val();
+            parent = $(`#id_${formPrefix}-${i}-${parentField}`).val();
+            nodes.push({
+              id: id,
+              parent: parent || "#",
+              text: $(`#id_${formPrefix}-${i}-${nameField}`).val(),
+              data: {
+                formIdx: i
+              }
+            });
+            if (parent) {
+              $(`#id_${formPrefix}-${i}-${parentField}_form_idx`).val(idToFormIdx[parent]);
+            }
+            idToFormIdx[id] = i;
+          }
         }
         cb.call(this, nodes);
       }
