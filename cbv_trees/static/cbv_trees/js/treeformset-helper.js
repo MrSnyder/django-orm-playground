@@ -11,8 +11,9 @@
  * @param {string} formPrefix - prefix of classes and ids of the formsets
  * @param {string} parentField - form field that contains the parent fk
  * @param {string} nameField - form field that contains the node name
+ * @param {boolean} disableFormHiding - if true, unselected forms will not be hidden
  */
-function initJsTreeFormset(treeContainerId, formPrefix, parentField, nameField) {
+function initJsTreeFormset(treeContainerId, formPrefix, parentField, nameField, disableFormHiding) {
   /**
    * Replaces all Django-generated id (e.g. 'id_layer-1-name') and name attributes (e.g.
    * 'id_layer-1-name') inside the given form element.
@@ -96,8 +97,10 @@ function initJsTreeFormset(treeContainerId, formPrefix, parentField, nameField) 
     // update name and parent form idx
     nodes.forEach(node => {
       $(`#id_${formPrefix}-${node.data.formIdx}-${nameField}`).val(node.text);
-      parentFormIdx = node.parent == '#' ? '' : nodeIdToFormIdx[node.parent];
+      const parentFormIdx = node.parent == '#' ? '' : nodeIdToFormIdx[node.parent];
       $(`#id_${formPrefix}-${node.data.formIdx}-${parentField}_form_idx`).val(parentFormIdx);
+      const parent = $(`#id_${formPrefix}-${parentFormIdx}-id`).val();
+      $(`#id_${formPrefix}-${node.data.formIdx}-${parentField}`).val(parent);
     });
 
     // update template form and management form
@@ -173,19 +176,34 @@ function initJsTreeFormset(treeContainerId, formPrefix, parentField, nameField) 
         "valid_children": []
       }
     }
+  }).on('loaded.jstree', function () {
+    const nodes = jsTree.get_json(undefined, {
+      flat: true,
+      no_a_attr: true,
+      no_li_attr: true,
+      no_state: true
+    });
+    $(this).jstree("open_all");
+    jsTree.select_node(nodes[0].id);
   }).on('create_node.jstree', function (e, data) {
     data.node.data = {
       formIdx: appendForm() - 1
     }
     updateFormset();
+    jsTree.deselect_node(jsTree.get_selected());
+    jsTree.select_node(data.node.id);
   }).on('rename_node.jstree', function (e, data) {
     updateFormset();
   }).on('delete_node.jstree', function (e, data) {
+    jsTree.select_node(data.node.parent);
     updateFormset();
   }).on('move_node.jstree', function (e, data) {
     updateFormset();
   }).on('select_node.jstree', function (e, data) {
-    // TODO switch visibility of form?
+    if (!disableFormHiding) {
+      $(`.${formPrefix}-form`).hide();
+    }
+    $(`.${formPrefix}-form`).eq(data.node.data.formIdx).show();
   });
   const jsTree = $(treeContainerId).jstree(true);
   $(treeContainerId).on('model.jstree', function (e, data) {
