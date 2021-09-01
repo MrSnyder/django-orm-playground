@@ -69,7 +69,7 @@ function initJsTreeFormset(treeContainerId, formPrefix, parentField, nameField, 
       no_state: true
     });
 
-    // determine forms and their order
+    // determine active forms and their order and remove them from the DOM
     const formsInOrder = [];
     const nodeIdToFormIdx = {};
     let forms = $(`.${formPrefix}-form`);
@@ -83,18 +83,33 @@ function initJsTreeFormset(treeContainerId, formPrefix, parentField, nameField, 
         node.data.formIdx = i;
         jsTree.get_node(node.id).data.formIdx = i;
         nodeIdToFormIdx[node.id] = i;
+        nodeForm.parentElement.removeChild(nodeForm);
       }
-      form.parentElement.removeChild(form);
     }
 
-    // re-add forms to DOM in order
-    const templateForm = $(`.${formPrefix}-form`).last()[0];
+    // update unused forms (deleted ones and template)
+    const unusedForms = $(`.${formPrefix}-form`);
+    for (i = 0; i < unusedForms.length; i++) {
+      const form = unusedForms[i];
+      replaceNameAndIdAttributes(unusedForms[i], i + formsInOrder.length);
+      if (i != unusedForms.length - 1) {
+        // check DELETE / remove
+        if ($(`#id_${formPrefix}-${i + formsInOrder.length}-id`).val()) {
+          $(`#id_${formPrefix}-${i + formsInOrder.length}-DELETE`).prop('checked', true);
+        } else {
+          form.parentElement.removeChild(form);
+        }
+      }
+    }
+
+    // re-add active forms to DOM in order
+    const topmostForm = $(`.${formPrefix}-form`).first()[0];
     for (i = 0; i < formsInOrder.length; i++) {
       replaceNameAndIdAttributes(formsInOrder[i], i);
-      templateForm.parentElement.insertBefore(formsInOrder[i], templateForm);
+      topmostForm.parentElement.insertBefore(formsInOrder[i], topmostForm);
     }
 
-    // update name and parent form idx
+    // update name and parent in active forms
     nodes.forEach(node => {
       $(`#id_${formPrefix}-${node.data.formIdx}-${nameField}`).val(node.text);
       const parentFormIdx = node.parent == '#' ? '' : nodeIdToFormIdx[node.parent];
@@ -103,11 +118,9 @@ function initJsTreeFormset(treeContainerId, formPrefix, parentField, nameField, 
       $(`#id_${formPrefix}-${node.data.formIdx}-${parentField}`).val(parent);
     });
 
-    // update template form and management form
-    replaceNameAndIdAttributes(templateForm, formsInOrder.length);
     // update number of forms in management form
     // https://docs.djangoproject.com/en/3.2/topics/forms/formsets/#understanding-the-managementform
-    document.querySelector(`#id_${formPrefix}-TOTAL_FORMS`).value = formsInOrder.length + 1;
+    document.querySelector(`#id_${formPrefix}-TOTAL_FORMS`).value = formsInOrder.length + unusedForms.length;
     // TODO instead of removing originally present forms, keep them and mark them as deleted
     document.querySelector(`#id_${formPrefix}-INITIAL_FORMS`).value = 0;
   }
