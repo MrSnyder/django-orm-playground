@@ -70,11 +70,31 @@ class LayerForm(ModelForm):
 
 class LayerTreeInlineFormSet(BaseInlineFormSet):
 
+    # TODO handle re-ordering of siblings
+
+    def save_new(self, form, commit=True):
+        """Save and return a new model instance for the given form."""
+        parent_form_idx = form.cleaned_data.get("parent_form_idx", None)
+        if parent_form_idx and form.instance.parent is None:
+            parent = self.forms[int(parent_form_idx)].instance
+            form.instance.parent = parent
+        return form.save(commit=commit)
+
+    def save_existing(self, form, instance, commit=True):
+        """Save and return an existing model instance for the given form."""
+        parent_form_idx = form.cleaned_data.get("parent_form_idx", None)
+        if parent_form_idx and form.instance.parent is None:
+            parent = self.forms[int(parent_form_idx)].instance
+            form.instance.parent = parent
+        return form.save(commit=commit)
+
     def save(self, commit=True):
         """
         Save model instances for every form, adding and changing instances
         as necessary, and return the list of instances.
         """
+        super().save(commit)
+        return
 
         # delete all forms that existed before
         # TODO better delete all objects related to the "instance"?

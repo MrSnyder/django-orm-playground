@@ -122,7 +122,7 @@ function initJsTreeFormset(treeContainerId, formPrefix, parentField, nameField, 
     // https://docs.djangoproject.com/en/3.2/topics/forms/formsets/#understanding-the-managementform
     document.querySelector(`#id_${formPrefix}-TOTAL_FORMS`).value = formsInOrder.length + unusedForms.length;
     // TODO instead of removing originally present forms, keep them and mark them as deleted
-    document.querySelector(`#id_${formPrefix}-INITIAL_FORMS`).value = 0;
+    //document.querySelector(`#id_${formPrefix}-INITIAL_FORMS`).value = 0;
   }
   $(treeContainerId).jstree({
     "core": {
